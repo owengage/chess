@@ -45,6 +45,16 @@ Board Board::blank()
     return {};
 }
 
+Board Board::with_pieces(std::vector<std::pair<Loc, Square>> const& pieces)
+{
+    auto b = Board::blank();
+    for (auto const& [loc, sq] : pieces)
+    {
+        b[loc] = sq;
+    }
+    return b;
+}
+
 Square & Board::operator[](Loc loc)
 {
     return squares[loc.index()];

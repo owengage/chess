@@ -1,5 +1,7 @@
 #pragma once
 #include <array>
+#include <vector>
+#include <utility>
 
 #include <chess/piece.h>
 #include <chess/loc.h>
@@ -10,6 +12,7 @@ namespace chess
     {
         static Board standard();
         static Board blank();
+        static Board with_pieces(std::vector<std::pair<Loc, Square>> const&);
 
         Square & operator[](Loc loc);
         Square const& operator[](Loc loc) const;

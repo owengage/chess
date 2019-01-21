@@ -32,4 +32,18 @@ namespace chess
         EXPECT_TRUE(try_move("D5", "C7"));
         EXPECT_TRUE(try_move("D5", "C3"));
     }
+
+    TEST(move_knight_test, can_jump)
+    {
+        auto b = Board::blank();
+        for (auto loc : Loc::all_squares())
+        {
+            b[loc] = Square{Pawn{Colour::black}};
+        }
+
+        b["A1"] = wknight;
+        auto g = Game{b};
+
+        EXPECT_TRUE(g.move("A1", "B3"));
+    }
 }

@@ -51,7 +51,7 @@ namespace
          */
         bool is_pieces_turn(PieceCommon const& p)
         {
-            return ((game.history().size() % 2) == 0) != (p.colour == Colour::white);
+            return ((game.history().size() % 2) == 1) != (p.colour == Colour::white);
         }
 
         /**
@@ -211,7 +211,7 @@ namespace
         MoveList operator()(T p)
         {
             MoveList pat;
-            if (is_pieces_turn(p))
+            if (!is_pieces_turn(p))
             {
                 return pat;
             }

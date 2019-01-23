@@ -7,6 +7,16 @@ namespace text = chess::text;
 
 namespace
 {
+    /**
+     * A potential alternative to these structs is a variable template. We want to restrict the types this works with to
+     * just the Square variants types. With variable templates we'd do this with some enable_if magic like
+     *
+     *  std::enable_if_t<std::is_base_of_v<chess::PieceCommon, T> || std::is_same_v<chess::Empty, T>, void>
+     *
+     *  on the template variable and then make specialisations for each. Problem with this is that if we miss a
+     *  specialisation then we just get whatever the basic version of the template is, rather than an error. With this
+     *  struct version, it doesn't find value on the base template and so fails to compile.
+     */
     template<typename> struct BaseSymbol {};
     template<> struct BaseSymbol<chess::Pawn> { static constexpr char value = 'p'; };
     template<> struct BaseSymbol<chess::Rook> { static constexpr char value = 'r'; };

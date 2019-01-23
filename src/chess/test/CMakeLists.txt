@@ -2,7 +2,9 @@ add_executable(move_test
         move_pawn_test.cpp
         move_knight_test.cpp
         move_general_test.cpp
-        move_rook_test.cpp)
+        move_rook_test.cpp
+        move_bishop_test.cpp
+        move_queen_test.cpp)
 
 target_link_libraries(move_test
         chess

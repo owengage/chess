@@ -5,12 +5,12 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wrook = Square{Rook{Colour::white}};
+        auto constexpr wbishop = Square{Rook{Colour::white}};
 
         bool try_move(Loc src, Loc dest)
         {
             auto g = Game{Board::with_pieces({
-                {src, wrook}
+                {src, wbishop}
             })};
             return g.move(src, dest);
         }
@@ -30,8 +30,8 @@ namespace chess
     TEST(move_rook_test, cant_move_up_through_own_piece)
     {
         auto game = Game{Board::with_pieces({
-            {"C1", wrook},
-            {"C5", wrook},
+            {"C1", wbishop},
+            {"C5", wbishop},
         })};
 
         EXPECT_FALSE(game.move("C1", "C6"));
@@ -40,7 +40,7 @@ namespace chess
     TEST(move_rook_test, can_capture_up)
     {
         auto game = Game{Board::with_pieces({
-            {"C1", wrook},
+            {"C1", wbishop},
             {"C5", Square{Rook{Colour::black}}}
         })};
 

@@ -87,6 +87,18 @@ std::optional<Loc> Loc::add_delta(Loc lhs, int dx, int dy)
     }
 }
 
+std::vector<Loc> Loc::direction(Loc origin, int dx, int dy)
+{
+    std::vector<Loc> locs;
+    std::optional<Loc> current = origin;
+    while (current && (current = Loc::add_delta(*current, dx, dy)))
+    {
+        locs.push_back(*current);
+    }
+
+    return locs;
+}
+
 Loc chess::operator+(Loc lhs, Loc rhs)
 {
     return {lhs.m_x + rhs.m_x, lhs.m_y + rhs.m_y};

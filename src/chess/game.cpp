@@ -150,52 +150,11 @@ namespace
             }
         }
 
-        void add_upwards(MoveList & ml)
+        void add_direction(MoveList & ml, int dx, int dy)
         {
-            auto const x = src.x();
-
-            for (auto y = src.y() + 1; y < Loc::side_size; ++y)
+            for (Loc loc : Loc::direction(src, dx, dy))
             {
-                if (add_standard(ml, {x, y}))
-                {
-                    break;
-                }
-            }
-        }
-
-        void add_downwards(MoveList & ml)
-        {
-            auto const x = src.x();
-
-            for (auto y = src.y() - 1 ; y >= 0; --y)
-            {
-                if (add_standard(ml, {x, y}))
-                {
-                    break;
-                }
-            }
-        }
-
-        void add_leftwards(MoveList & ml)
-        {
-            auto const y = src.y();
-
-            for (auto x = src.x() - 1; x >= 0; --x)
-            {
-                if (add_standard(ml, {x, y}))
-                {
-                    break;
-                }
-            }
-        }
-
-        void add_rightwards(MoveList & ml)
-        {
-            auto const y = src.y();
-
-            for (auto x = src.x() + 1; x < Loc::side_size; ++x)
-            {
-                if (add_standard(ml, {x, y}))
+                if (add_standard(ml, loc))
                 {
                     break;
                 }
@@ -267,10 +226,10 @@ namespace
         {
             MoveList ml{};
 
-            add_upwards(ml);
-            add_downwards(ml);
-            add_leftwards(ml);
-            add_rightwards(ml);
+            add_direction(ml, 0, 1);
+            add_direction(ml, 1, 0);
+            add_direction(ml, -1, 0);
+            add_direction(ml, 0, -1);
 
             return ml;
         }
@@ -291,12 +250,26 @@ namespace
 
         MoveList get_for(Bishop p)
         {
-            return {};
+            MoveList ml;
+            add_direction(ml, 1, 1);
+            add_direction(ml, -1, 1);
+            add_direction(ml, 1, -1);
+            add_direction(ml, -1, -1);
+            return ml;
         }
 
         MoveList get_for(Queen p)
         {
-            return {};
+            MoveList ml;
+            add_direction(ml, 0, 1);
+            add_direction(ml, 1, 0);
+            add_direction(ml, -1, 0);
+            add_direction(ml, 0, -1);
+            add_direction(ml, 1, 1);
+            add_direction(ml, -1, 1);
+            add_direction(ml, 1, -1);
+            add_direction(ml, -1, -1);
+            return ml;
         }
 
         MoveList get_for(King p)

@@ -25,6 +25,7 @@ namespace chess
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
         static std::optional<Loc> add_delta(Loc lhs, int x, int y);
+        static std::vector<Loc> direction(Loc origin, int dx, int dy);
     private:
         int m_x;
         int m_y;

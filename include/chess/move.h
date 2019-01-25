@@ -1,0 +1,14 @@
+#pragma once
+
+#include <chess/loc.h>
+#include <chess/board.h>
+
+namespace chess
+{
+    struct Move
+    {
+        Loc src;
+        Loc dest;
+        Board result;
+    };
+}

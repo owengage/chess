@@ -3,16 +3,10 @@
 #include <vector>
 
 #include <chess/board.h>
+#include <chess/move.h>
 
 namespace chess
 {
-    struct Move
-    {
-        Loc src;
-        Loc dest;
-        Board result;
-    };
-
     struct Game
     {
         Game();

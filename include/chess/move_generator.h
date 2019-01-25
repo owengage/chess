@@ -80,7 +80,7 @@ namespace chess
          */
         void add_direction(MoveList &ml, int dx, int dy);
 
-        Game const &game;
+        Game const& game;
         Loc src;
     };
 }

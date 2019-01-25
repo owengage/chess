@@ -4,28 +4,6 @@
 
 namespace chess {
 
-    namespace
-    {
-        struct ColourVisitor
-        {
-            Colour operator()(PieceCommon const& p)
-            {
-                return p.colour;
-            }
-
-            Colour operator()(Empty)
-            {
-                throw std::runtime_error{"Tried to get colour of empty square"};
-            }
-        };
-
-        Colour get_colour(Square sq)
-        {
-            return std::visit(ColourVisitor{}, sq);
-        }
-
-    }
-
     MoveGenerator::MoveGenerator(Game const &game, Loc src)
     : game{game}, src{src} {}
 
@@ -34,11 +12,9 @@ namespace chess {
             return ((game.history().size() % 2) == 1) != (p.colour == Colour::white);
         }
 
-
         bool MoveGenerator::is_empty(Loc loc) {
             return game.current()[loc] == Square{Empty{}};
         }
-
 
         bool MoveGenerator::is_capturable(Loc loc) {
             auto const board = game.current();

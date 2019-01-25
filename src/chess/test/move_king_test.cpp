@@ -1,22 +1,33 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
+#include "player_fixture.h"
+
 namespace chess
 {
     namespace
     {
         auto constexpr wking = Square{King{Colour::white}};
+    }
+
+
+    struct MoveKingFixture : public PlayerFixture
+    {
+        Game with_wking_at(Loc loc)
+        {
+            auto b = Board::blank();
+            b[loc] = wking;
+            return Game{p1, p2, b};
+        }
 
         bool try_move(Loc src, Loc dest)
         {
-            auto g = Game{Board::with_pieces({
-                {src, wking}
-            })};
+            auto g = with_wking_at(src);
             return g.move(src, dest);
         }
-    }
+    };
 
-    TEST(move_king_test, can_move_one_square)
+    TEST_F(MoveKingFixture, can_move_one_square)
     {
         EXPECT_TRUE(try_move("C4", "C5"));
         EXPECT_TRUE(try_move("C4", "D5"));
@@ -28,9 +39,9 @@ namespace chess
         EXPECT_TRUE(try_move("C4", "B5"));
     }
 
-    TEST(move_king_test, can_capture)
+    TEST_F(MoveKingFixture, can_capture)
     {
-        auto game = Game{Board::with_pieces({
+        auto game = Game{p1, p2, Board::with_pieces({
             {"B2", wking},
             {"B3", Square{Knight{Colour::black}}}
         })};

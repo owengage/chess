@@ -2,10 +2,12 @@
 #include <cstdint>
 
 #include <chess/game.h>
+#include <chess/player.h>
 #include <chess/move_generator.h>
 
 using chess::Loc;
 using chess::Game;
+using chess::Player;
 using chess::Board;
 using chess::Square;
 using chess::Empty;
@@ -31,10 +33,14 @@ namespace
     }
 }
 
-Game::Game() : Game{Board::standard()}
+Game::Game(Player & p1, Player & p2) : Game{p1, p2, Board::standard()}
 {}
 
-Game::Game(Board b) : m_start{std::move(b)}
+Game::Game(Player & p1, Player & p2, Board b):
+    m_start{std::move(b)},
+    m_history{},
+    m_player1{p1},
+    m_player2{p2}
 {}
 
 Board Game::current() const
@@ -58,9 +64,38 @@ bool Game::move(Loc src, Loc dest)
 
     if (move_it != std::end(moves))
     {
-        m_history.push_back(*move_it);
+        auto move = *move_it;
+        handle_promotion(move);
+        m_history.push_back(move);
         return true;
     }
 
     return false;
+}
+
+Player & Game::current_player()
+{
+    return (m_history.size() % 2 == 0) ? m_player1 : m_player2;
+}
+
+void Game::handle_promotion(chess::Move & move)
+{
+    auto const y = move.dest.y();
+    auto const p = move.result[move.dest];
+
+    if ((y == Loc::side_size - 1 || y == 0) && std::holds_alternative<Pawn>(p))
+    {
+        auto & player = current_player();
+        auto colour = get_colour(p);
+        auto promotion = player.promote(*this, move.dest);
+
+        if (colour == get_colour(promotion) && !std::holds_alternative<Pawn>(promotion))
+        {
+            move.result[move.dest] = promotion;
+        }
+        else
+        {
+            throw InvalidPlayerAction{"Promoted to invalid piece"};
+        }
+    }
 }

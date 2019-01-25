@@ -5,4 +5,6 @@ add_library(chess
         loc.cpp
         board.cpp
         game.cpp
-        move_generator.cpp)
+        square.cpp
+        move_generator.cpp
+        random_player.cpp)

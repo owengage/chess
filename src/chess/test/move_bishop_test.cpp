@@ -1,22 +1,33 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
+#include "player_fixture.h"
+
 namespace chess
 {
     namespace
     {
         auto constexpr wbishop = Square{Bishop{Colour::white}};
+    }
+
+    struct MoveBishopFixture : public PlayerFixture
+    {
+        Game with_wbishop_at(Loc loc)
+        {
+            auto b = Board::blank();
+            b[loc] = wbishop;
+            return Game{p1, p2, b};
+        }
 
         bool try_move(Loc src, Loc dest)
         {
-            auto g = Game{Board::with_pieces({
-                {src, wbishop}
-            })};
+            auto g = with_wbishop_at(src);
             return g.move(src, dest);
         }
-    }
+    };
 
-    TEST(move_bishop_test, can_move_upright)
+
+    TEST_F(MoveBishopFixture, can_move_upright)
     {
         EXPECT_TRUE(try_move("A1", "B2"));
         EXPECT_TRUE(try_move("A1", "C3"));
@@ -27,7 +38,7 @@ namespace chess
         EXPECT_TRUE(try_move("A1", "H8"));
     }
 
-    TEST(move_bishop_test, can_move_downleft)
+    TEST_F(MoveBishopFixture, can_move_downleft)
     {
         EXPECT_TRUE(try_move("H8", "A1"));
         EXPECT_TRUE(try_move("H8", "B2"));
@@ -38,7 +49,7 @@ namespace chess
         EXPECT_TRUE(try_move("H8", "G7"));
     }
 
-    TEST(move_bishop_test, can_move_upleft)
+    TEST_F(MoveBishopFixture, can_move_upleft)
     {
         EXPECT_TRUE(try_move("H1", "G2"));
         EXPECT_TRUE(try_move("H1", "F3"));
@@ -49,7 +60,7 @@ namespace chess
         EXPECT_TRUE(try_move("H1", "A8"));
     }
 
-    TEST(move_bishop_test, can_move_downright)
+    TEST_F(MoveBishopFixture, can_move_downright)
     {
         EXPECT_TRUE(try_move("A8", "H1"));
         EXPECT_TRUE(try_move("A8", "G2"));
@@ -60,9 +71,9 @@ namespace chess
         EXPECT_TRUE(try_move("A8", "B7"));
     }
 
-    TEST(move_bishop_test, cant_move_through_own_piece)
+    TEST_F(MoveBishopFixture, cant_move_through_own_piece)
     {
-        auto game = Game{Board::with_pieces({
+        auto game = Game{p1, p2, Board::with_pieces({
             {"B2", wbishop},
             {"D4", wbishop},
         })};
@@ -70,9 +81,9 @@ namespace chess
         EXPECT_FALSE(game.move("B2", "E5"));
     }
 
-    TEST(move_bishop_test, can_capture)
+    TEST_F(MoveBishopFixture, can_capture)
     {
-        auto game = Game{Board::with_pieces({
+        auto game = Game{p1, p2, Board::with_pieces({
             {"B2", wbishop},
             {"D4", Square{Bishop{Colour::black}}}
         })};

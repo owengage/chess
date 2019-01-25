@@ -9,6 +9,7 @@ add_executable(move_test
 
 target_link_libraries(move_test
         chess
+        gmock
         gtest_main)
 
 add_test(NAME move_test COMMAND move_test)

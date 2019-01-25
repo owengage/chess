@@ -20,8 +20,8 @@ namespace chess
 
         int x() const;
         int y() const;
-
         int index() const;
+
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
         static std::optional<Loc> add_delta(Loc lhs, int x, int y);

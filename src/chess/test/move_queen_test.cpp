@@ -1,22 +1,32 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
+#include "player_fixture.h"
+
 namespace chess
 {
     namespace
     {
         auto constexpr wqueen = Square{Queen{Colour::white}};
+    }
+
+    struct MoveQueenFixture : public PlayerFixture
+    {
+        Game with_wqueen_at(Loc loc)
+        {
+            auto b = Board::blank();
+            b[loc] = wqueen;
+            return Game{p1, p2, b};
+        }
 
         bool try_move(Loc src, Loc dest)
         {
-            auto g = Game{Board::with_pieces({
-                {src, wqueen}
-            })};
+            auto g = with_wqueen_at(src);
             return g.move(src, dest);
         }
-    }
-
-    TEST(move_queen_test, can_move_upright)
+    };
+    
+    TEST_F(MoveQueenFixture, can_move_upright)
     {
         EXPECT_TRUE(try_move("A1", "B2"));
         EXPECT_TRUE(try_move("A1", "C3"));
@@ -27,7 +37,7 @@ namespace chess
         EXPECT_TRUE(try_move("A1", "H8"));
     }
 
-    TEST(move_queen_test, can_move_downleft)
+    TEST_F(MoveQueenFixture, can_move_downleft)
     {
         EXPECT_TRUE(try_move("H8", "A1"));
         EXPECT_TRUE(try_move("H8", "B2"));
@@ -38,7 +48,7 @@ namespace chess
         EXPECT_TRUE(try_move("H8", "G7"));
     }
 
-    TEST(move_queen_test, can_move_upleft)
+    TEST_F(MoveQueenFixture, can_move_upleft)
     {
         EXPECT_TRUE(try_move("H1", "G2"));
         EXPECT_TRUE(try_move("H1", "F3"));
@@ -49,7 +59,7 @@ namespace chess
         EXPECT_TRUE(try_move("H1", "A8"));
     }
 
-    TEST(move_queen_test, can_move_downright)
+    TEST_F(MoveQueenFixture, can_move_downright)
     {
         EXPECT_TRUE(try_move("A8", "H1"));
         EXPECT_TRUE(try_move("A8", "G2"));
@@ -60,7 +70,7 @@ namespace chess
         EXPECT_TRUE(try_move("A8", "B7"));
     }
     
-    TEST(move_queen_test, can_move_up)
+    TEST_F(MoveQueenFixture, can_move_up)
     {
         EXPECT_TRUE(try_move("A1", "A2"));
         EXPECT_TRUE(try_move("A1", "A3"));
@@ -71,7 +81,7 @@ namespace chess
         EXPECT_TRUE(try_move("A1", "A8"));
     }
     
-    TEST(move_queen_test, can_move_down)
+    TEST_F(MoveQueenFixture, can_move_down)
     {
         EXPECT_TRUE(try_move("A8", "A1"));
         EXPECT_TRUE(try_move("A8", "A2"));
@@ -82,7 +92,7 @@ namespace chess
         EXPECT_TRUE(try_move("A8", "A7"));
     }
 
-    TEST(move_queen_test, can_move_left)
+    TEST_F(MoveQueenFixture, can_move_left)
     {
         EXPECT_TRUE(try_move("H4", "G4"));
         EXPECT_TRUE(try_move("H4", "F4"));
@@ -93,7 +103,7 @@ namespace chess
         EXPECT_TRUE(try_move("H4", "A4"));
     }
 
-    TEST(move_queen_test, can_move_right)
+    TEST_F(MoveQueenFixture, can_move_right)
     {
         EXPECT_TRUE(try_move("A4", "H4"));
         EXPECT_TRUE(try_move("A4", "G4"));
@@ -105,9 +115,9 @@ namespace chess
     }
 
 
-    TEST(move_queen_test, cant_move_through_own_piece)
+    TEST_F(MoveQueenFixture, cant_move_through_own_piece)
     {
-        auto game = Game{Board::with_pieces({
+        auto game = Game{p1, p2, Board::with_pieces({
             {"B2", wqueen},
             {"D4", wqueen},
         })};
@@ -115,9 +125,9 @@ namespace chess
         EXPECT_FALSE(game.move("B2", "E5"));
     }
 
-    TEST(move_queen_test, can_capture)
+    TEST_F(MoveQueenFixture, can_capture)
     {
-        auto game = Game{Board::with_pieces({
+        auto game = Game{p1, p2, Board::with_pieces({
             {"B2", wqueen},
             {"D4", Square{Queen{Colour::black}}}
         })};

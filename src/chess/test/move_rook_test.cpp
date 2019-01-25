@@ -1,22 +1,33 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
+#include "player_fixture.h"
+
 namespace chess
 {
     namespace
     {
-        auto constexpr wbishop = Square{Rook{Colour::white}};
+        auto constexpr wrook = Square{Rook{Colour::white}};
+    }
+
+    struct MoveRookFixture : public PlayerFixture
+    {
+        Game with_wrook_at(Loc loc)
+        {
+            auto b = Board::blank();
+            b[loc] = wrook;
+            return Game{p1, p2, b};
+        }
 
         bool try_move(Loc src, Loc dest)
         {
-            auto g = Game{Board::with_pieces({
-                {src, wbishop}
-            })};
+            auto g = with_wrook_at(src);
             return g.move(src, dest);
         }
-    }
+    };
 
-    TEST(move_rook_test, can_move_up)
+
+    TEST_F(MoveRookFixture, can_move_up)
     {
         EXPECT_TRUE(try_move("A1", "A2"));
         EXPECT_TRUE(try_move("A1", "A3"));
@@ -27,27 +38,27 @@ namespace chess
         EXPECT_TRUE(try_move("A1", "A8"));
     }
 
-    TEST(move_rook_test, cant_move_up_through_own_piece)
+    TEST_F(MoveRookFixture, cant_move_up_through_own_piece)
     {
-        auto game = Game{Board::with_pieces({
-            {"C1", wbishop},
-            {"C5", wbishop},
+        auto game = Game{p1, p2, Board::with_pieces({
+            {"C1", wrook},
+            {"C5", wrook},
         })};
 
         EXPECT_FALSE(game.move("C1", "C6"));
     }
 
-    TEST(move_rook_test, can_capture_up)
+    TEST_F(MoveRookFixture, can_capture_up)
     {
-        auto game = Game{Board::with_pieces({
-            {"C1", wbishop},
+        auto game = Game{p1, p2, Board::with_pieces({
+            {"C1", wrook},
             {"C5", Square{Rook{Colour::black}}}
         })};
 
         EXPECT_TRUE(game.move("C1", "C5"));
     }
 
-    TEST(move_rook_test, can_move_down)
+    TEST_F(MoveRookFixture, can_move_down)
     {
         EXPECT_TRUE(try_move("A8", "A1"));
         EXPECT_TRUE(try_move("A8", "A2"));
@@ -58,7 +69,7 @@ namespace chess
         EXPECT_TRUE(try_move("A8", "A7"));
     }
 
-    TEST(move_rook_test, can_move_left)
+    TEST_F(MoveRookFixture, can_move_left)
     {
         EXPECT_TRUE(try_move("H4", "G4"));
         EXPECT_TRUE(try_move("H4", "F4"));
@@ -69,7 +80,7 @@ namespace chess
         EXPECT_TRUE(try_move("H4", "A4"));
     }
 
-    TEST(move_rook_test, can_move_right)
+    TEST_F(MoveRookFixture, can_move_right)
     {
         EXPECT_TRUE(try_move("A4", "H4"));
         EXPECT_TRUE(try_move("A4", "G4"));

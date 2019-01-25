@@ -4,7 +4,7 @@ Make a chess game, make a chess engine.
 
 ## TODOs
 
-* King moves
-* Promotion
 * Castling
+* Check
+* Checkmate
 * Engine...

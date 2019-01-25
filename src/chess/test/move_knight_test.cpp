@@ -1,17 +1,22 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
+#include "player_fixture.h"
+
 namespace chess
 {
     namespace
     {
         auto constexpr wknight = Square{Knight{Colour::white}};
+    }
 
+    struct MoveKnightFixture : public PlayerFixture
+    {
         Game with_wknight_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wknight;
-            return Game{b};
+            return Game{p1, p2, b};
         }
 
         bool try_move(Loc src, Loc dest)
@@ -19,9 +24,9 @@ namespace chess
             auto g = with_wknight_at(src);
             return g.move(src, dest);
         }
-    }
+    };
 
-    TEST(move_knight_test, can_move_white_knight)
+    TEST_F(MoveKnightFixture, can_move_white_knight)
     {
         EXPECT_TRUE(try_move("A5", "B7"));
         EXPECT_TRUE(try_move("A5", "B3"));
@@ -33,7 +38,7 @@ namespace chess
         EXPECT_TRUE(try_move("D5", "C3"));
     }
 
-    TEST(move_knight_test, can_jump)
+    TEST_F(MoveKnightFixture, can_jump)
     {
         auto b = Board::blank();
         for (auto loc : Loc::all_squares())
@@ -42,7 +47,7 @@ namespace chess
         }
 
         b["A1"] = wknight;
-        auto g = Game{b};
+        auto g = Game{p1, p2, b};
 
         EXPECT_TRUE(g.move("A1", "B3"));
     }

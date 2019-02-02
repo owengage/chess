@@ -16,13 +16,14 @@ namespace chess
 
         template<typename T>
         MoveList operator()(T p) {
-            MoveList pat;
+            MoveList ml;
             if (!is_pieces_turn(p)) {
-                return pat;
+                return ml;
             }
 
-            pat = get_for(p);
-            return pat;
+            ml = get_for(p);
+            remove_checked(ml);
+            return ml;
         }
 
     private:
@@ -53,6 +54,11 @@ namespace chess
          */
         bool has_moved(Loc loc);
 
+        /**
+         * True if either player is in check on given board.
+         */
+        bool is_in_check(Board const&);
+
         void add(MoveList &ml, Loc dest);
 
         /**
@@ -79,6 +85,8 @@ namespace chess
          * Add moves for the given direction from the source square.
          */
         void add_direction(MoveList &ml, int dx, int dy);
+
+        void remove_checked(MoveList &ml);
 
         Game const& game;
         Loc src;

@@ -8,6 +8,17 @@
 namespace chess
 {
     struct Player;
+    struct Game;
+
+    struct AssumedMoveToken
+    {
+        AssumedMoveToken(Game &);
+        ~AssumedMoveToken();
+        AssumedMoveToken(AssumedMoveToken const&) = delete;
+        void operator=(AssumedMoveToken const&) = delete;
+
+        Game & game;
+    };
 
     struct Game
     {
@@ -18,6 +29,7 @@ namespace chess
         std::vector<Move> const& history() const;
 
         bool move(Loc src, Loc dest);
+        AssumedMoveToken assume_move(Move const&);
     private:
         Board m_start;
         std::vector<Move> m_history;
@@ -26,5 +38,7 @@ namespace chess
 
         Player & current_player();
         void handle_promotion(Move &);
+
+        friend struct AssumedMoveToken;
     };
 }

@@ -3,10 +3,11 @@
 
 #include <chess/game.h>
 #include <chess/player.h>
-#include <chess/move_generator.h>
+#include <chess/available_moves.h>
 
 using chess::Loc;
 using chess::Game;
+using chess::AssumedMoveToken;
 using chess::Player;
 using chess::Board;
 using chess::Square;
@@ -20,17 +21,25 @@ using chess::Queen;
 using chess::King;
 using chess::Colour;
 using chess::Move;
-using chess::MoveList;
-using chess::MoveGenerator;
 
 namespace
 {
-    MoveList get_moves(Game const &game, Loc src)
+    std::vector<Move> get_moves_for(Game const &game, Loc src)
     {
-        auto sq = game.current()[src];
-        auto pv = MoveGenerator{game, src};
-        return std::visit(pv, sq);
+        auto moves = chess::available_moves(game);
+        auto it = std::remove_if(begin(moves), end(moves), [&src](auto move) { return move.src != src; });
+        moves.erase(it, end(moves));
+
+        return moves;
     }
+}
+
+AssumedMoveToken::AssumedMoveToken(Game & game) : game{game}
+{}
+
+AssumedMoveToken::~AssumedMoveToken()
+{
+    game.m_history.pop_back();
 }
 
 Game::Game(Player & p1, Player & p2) : Game{p1, p2, Board::standard()}
@@ -59,7 +68,7 @@ std::vector<Move> const& Game::history() const
 
 bool Game::move(Loc src, Loc dest)
 {
-    auto moves = get_moves(*this, src);
+    auto moves = get_moves_for(*this, src);
     auto move_it = std::find_if(begin(moves), end(moves), [dest](Move m) { return m.dest == dest; });
 
     if (move_it != std::end(moves))
@@ -71,6 +80,12 @@ bool Game::move(Loc src, Loc dest)
     }
 
     return false;
+}
+
+AssumedMoveToken Game::assume_move(Move const& move)
+{
+    m_history.push_back(move);
+    return AssumedMoveToken{*this};
 }
 
 Player & Game::current_player()

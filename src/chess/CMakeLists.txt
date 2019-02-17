@@ -6,5 +6,5 @@ add_library(chess
         board.cpp
         game.cpp
         square.cpp
-        move_generator.cpp
+        available_moves.cpp
         random_player.cpp)

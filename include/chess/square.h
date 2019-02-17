@@ -31,4 +31,6 @@ namespace chess
     using Square = std::variant<Empty, Pawn, Rook, Knight, Bishop, King, Queen>;
 
     Colour get_colour(Square sq);
+    bool is_colour(Square sq, Colour c);
+
 }

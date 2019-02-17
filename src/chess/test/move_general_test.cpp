@@ -9,7 +9,9 @@ namespace chess
     {
         auto constexpr wknight = Square{Knight{Colour::white}};
         auto constexpr wking = Square{King{Colour::white}};
+        auto constexpr wpawn = Square{Pawn{Colour::white}};
         auto constexpr bknight = Square{Knight{Colour::black}};
+        auto constexpr bking = Square{King{Colour::black}};
         auto constexpr brook = Square{Rook{Colour::black}};
         auto constexpr empty = Square{Empty{}};
     }
@@ -50,5 +52,16 @@ namespace chess
         auto g = Game{p1, p2, b};
 
         EXPECT_FALSE(g.move("C4", "D6"));
+    }
+
+    TEST_F(MoveGeneralFixture, cant_move_king_into_direct_danger)
+    {
+        auto b = Board::with_pieces({
+                {"C3", wking},
+                {"D8", brook}
+        });
+        auto g = Game{p1, p2, b};
+
+        EXPECT_FALSE(g.move("C3", "D3"));
     }
 }

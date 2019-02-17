@@ -25,3 +25,8 @@ Colour chess::get_colour(Square sq)
 {
     return std::visit(ColourVisitor{}, sq);
 }
+
+bool chess::is_colour(Square sq, Colour c)
+{
+    return !std::holds_alternative<Empty>(sq) && get_colour(sq) == c;
+}

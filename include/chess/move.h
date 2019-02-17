@@ -10,5 +10,6 @@ namespace chess
         Loc src;
         Loc dest;
         Board result;
+        bool caused_check = false;
     };
 }

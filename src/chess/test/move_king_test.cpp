@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
-#include "player_fixture.h"
+#include "game_fixture.h"
 
 namespace chess
 {
@@ -11,13 +11,13 @@ namespace chess
     }
 
 
-    struct MoveKingFixture : public PlayerFixture
+    struct MoveKingFixture : public GameFixture
     {
         Game with_wking_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wking;
-            return Game{p1, p2, b};
+            return Game{driver, b};
         }
 
         bool try_move(Loc src, Loc dest)
@@ -41,7 +41,7 @@ namespace chess
 
     TEST_F(MoveKingFixture, can_capture)
     {
-        auto game = Game{p1, p2, Board::with_pieces({
+        auto game = Game{driver, Board::with_pieces({
             {"B2", wking},
             {"B3", Square{Knight{Colour::black}}}
         })};

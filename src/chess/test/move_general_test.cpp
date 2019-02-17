@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
+#include <chess/available_moves.h>
 
-#include "player_fixture.h"
+#include "game_fixture.h"
+
+using testing::_;
+using testing::Return;
 
 namespace chess
 {
@@ -19,14 +23,14 @@ namespace chess
         auto constexpr empty = Square{Empty{}};
     }
 
-    struct MoveGeneralFixture : public PlayerFixture {};
+    struct MoveGeneralFixture : public GameFixture {};
     
     TEST_F(MoveGeneralFixture, can_capture_opposite_piece)
     {
         auto b = Board::blank();
         b["C2"] = wknight;
         b["D4"] = bknight;
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("C2", "D4"));
         EXPECT_EQ(wknight, g.current()["D4"]);
@@ -38,7 +42,7 @@ namespace chess
         auto b = Board::blank();
         b["C2"] = wknight;
         b["D4"] = wknight;
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("C2", "D4"));
         EXPECT_EQ(wknight, g.current()["D4"]);
@@ -52,7 +56,7 @@ namespace chess
             {"C3", wking},
             {"C5", brook}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("C4", "D6"));
     }
@@ -63,7 +67,7 @@ namespace chess
                 {"C3", wking},
                 {"D8", brook}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("C3", "D3"));
     }
@@ -74,7 +78,7 @@ namespace chess
                 {"D1", wking},
                 {"D8", brook}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "C1"));
     }
@@ -85,7 +89,7 @@ namespace chess
                 {"A1", wrook},
                 {"D1", wking}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "B1"));
         EXPECT_EQ(wking, g.current()["B1"]);
@@ -99,7 +103,7 @@ namespace chess
                 {"D1", wking},
                 {"D8", brook}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("D1", "B1"));
     }
@@ -111,7 +115,7 @@ namespace chess
                 {"D1", wking},
                 {"C8", brook} // can attack king 'through' castling
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("D1", "B1"));
     }
@@ -123,7 +127,7 @@ namespace chess
                 {"D1", wking},
                 {"B8", brook} // can attack king 'through' castling
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("D1", "B1"));
     }
@@ -136,7 +140,7 @@ namespace chess
                 {"A1", wrook},
                 {"D1", wking},
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("A1", "A2")); // move rook
         EXPECT_TRUE(g.move("F7", "F6")); // move pawn to get back to white
@@ -153,7 +157,7 @@ namespace chess
                 {"A1", wrook},
                 {"D1", wking},
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "D2")); // move king
         EXPECT_TRUE(g.move("F7", "F6")); // move pawn to get back to white
@@ -169,7 +173,7 @@ namespace chess
                 {"H1", wrook},
                 {"D1", wking},
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "G1"));
         EXPECT_EQ(wking, g.current()["G1"]);
@@ -183,10 +187,11 @@ namespace chess
                 {"D1", wking},
                 {"E1", wqueen},
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("D1", "G1"));
     }
+
     TEST_F(MoveGeneralFixture, cant_king_side_castle_with_piece_in_way)
     {
         auto b = Board::with_pieces({
@@ -194,10 +199,40 @@ namespace chess
                 {"D1", wking},
                 {"B1", wqueen},
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("D1", "B1"));
     }
 
+    TEST_F(MoveGeneralFixture, move_causing_checkmate_calls_driver)
+    {
+        auto b = Board::with_pieces({
+                {"C7", brook},
+                {"B8", brook},
+                {"A1", wking},
+        });
+        auto g = Game{driver, b};
+
+        EXPECT_CALL(driver, checkmate(_,_));
+
+        EXPECT_TRUE(g.move("A1", "A2")); // get to black's move
+        EXPECT_TRUE(g.move("C7", "A7")); // rook to checkmate
+    }
+
+    TEST_F(MoveGeneralFixture, move_causing_stalemate_calls_driver)
+    {
+        auto b = Board::with_pieces({
+                {"H3", wrook},
+                {"B8", wrook},
+                {"A1", bking},
+        });
+        auto g = Game{driver, b};
+
+        EXPECT_CALL(driver, stalemate(_,_));
+
+        EXPECT_TRUE(g.move("H3", "H2")); // king has no where to move, stalemate.
+    }
+
     // TODO: Weird checks if king start position is not standard...
+    // TODO: Long-game stalemate detection.
 }

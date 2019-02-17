@@ -9,6 +9,7 @@ namespace chess
 {
     struct Player;
     struct Game;
+    struct Driver;
 
     struct AssumedMoveToken
     {
@@ -22,8 +23,8 @@ namespace chess
 
     struct Game
     {
-        Game(Player &, Player &);
-        Game(Player &, Player &, Board);
+        Game(Driver &);
+        Game(Driver &, Board);
 
         Board current() const;
         std::vector<Move> const& history() const;
@@ -37,11 +38,11 @@ namespace chess
     private:
         Board m_start;
         std::vector<Move> m_history;
-        Player & m_player1;
-        Player & m_player2;
+        Driver & m_driver;
 
-        Player & current_player();
+        bool in_check();
         void handle_promotion(Move &);
+        void handle_checkmate(Move const&);
 
         friend struct AssumedMoveToken;
     };

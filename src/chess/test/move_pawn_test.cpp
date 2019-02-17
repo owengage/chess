@@ -6,7 +6,7 @@
 #include <chess/text/print.h>
 
 #include "player_mock.h"
-#include "player_fixture.h"
+#include "game_fixture.h"
 
 using testing::_;
 using testing::Return;
@@ -19,26 +19,26 @@ namespace chess
         auto constexpr bpawn = Square{Pawn{Colour::black}};
     }
 
-    struct MovePawnFixture : public PlayerFixture
+    struct MovePawnFixture : public GameFixture
     {
         Game with_wpawn_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wpawn;
-            return Game{p1, p2, b};
+            return Game{driver, b};
         }
     };
     
     TEST_F(MovePawnFixture, can_move_white_pawn_forward_one)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         EXPECT_TRUE(g.move("A2", "A3"));
         EXPECT_EQ(wpawn, g.current()["A3"]);
     }
 
     TEST_F(MovePawnFixture, cant_move_white_pawn_left_right_down)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         EXPECT_FALSE(g.move("A2", "B2"));
         EXPECT_FALSE(g.move("B2", "A2"));
         EXPECT_FALSE(g.move("A2", "A1"));
@@ -46,7 +46,7 @@ namespace chess
 
     TEST_F(MovePawnFixture, cant_move_pawn_if_not_players_turn)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         g.move("A2", "A3");
         EXPECT_FALSE(g.move("A3", "A4"));
     }
@@ -59,7 +59,7 @@ namespace chess
 
     TEST_F(MovePawnFixture, cant_move_no_space)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         EXPECT_FALSE(g.move("A2", "A2"));
     }
 
@@ -82,7 +82,7 @@ namespace chess
         b["A1"] = wpawn;
         b["B2"] = bpawn;
 
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
         EXPECT_TRUE(g.move("A1", "B2"));
     }
 
@@ -92,7 +92,7 @@ namespace chess
         b["B1"] = wpawn;
         b["A2"] = bpawn;
 
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
         EXPECT_TRUE(g.move("B1", "A2"));
     }
 
@@ -102,20 +102,20 @@ namespace chess
         b["B1"] = wpawn;
         b["B2"] = bpawn;
 
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
         EXPECT_FALSE(g.move("B1", "B2"));
     }
 
     TEST_F(MovePawnFixture, cant_double_jump_after_own_first_move)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         g.move("A2", "A3");
         EXPECT_FALSE(g.move("A5", "A5"));
     }
 
     TEST_F(MovePawnFixture, can_double_jump_on_own_first_move)
     {
-        auto g = Game{p1, p2};
+        auto g = Game{driver};
         EXPECT_TRUE(g.move("A2", "A4"));
     }
 
@@ -125,7 +125,7 @@ namespace chess
             {"A2", wpawn},
             {"B4", bpawn}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         g.move("A2", "A4");
         EXPECT_TRUE(g.move("B4", "A3")); // en passant
@@ -139,7 +139,7 @@ namespace chess
             {"C2", wpawn},
             {"B4", bpawn}
         });
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         g.move("C2", "C4");
         EXPECT_TRUE(g.move("B4", "C3")); // en passant
@@ -156,7 +156,7 @@ namespace chess
             {"H7", bpawn}
         });
 
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         g.move("A2", "A4");
 
@@ -174,15 +174,15 @@ namespace chess
             {"A3", bpawn}
         });
 
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
         EXPECT_FALSE(g.move("A2", "A4"));
     }
 
     TEST_F(MovePawnFixture, white_gets_promoted_at_end_of_board)
     {
-        EXPECT_CALL(p1, promote(_, _)).WillOnce(Return(Square{Queen{Colour::white}}));
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Queen{Colour::white}}));
 
-        auto g = Game{p1, p2, Board::with_pieces({
+        auto g = Game{driver, Board::with_pieces({
             {"A7", wpawn}
         })};
 
@@ -192,20 +192,20 @@ namespace chess
 
     TEST_F(MovePawnFixture, promoting_piece_to_pawn_causes_exeception)
     {
-        EXPECT_CALL(p1, promote(_, _)).WillOnce(Return(Square{Pawn{Colour::white}}));
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Pawn{Colour::white}}));
 
-        auto g = Game{p1, p2, Board::with_pieces({
+        auto g = Game{driver, Board::with_pieces({
             {"A7", wpawn}
         })};
 
-        EXPECT_THROW(g.move("A7", "A8"), InvalidPlayerAction);
+        EXPECT_THROW(g.move("A7", "A8"), InvalidDriverAction);
     }
 
     TEST_F(MovePawnFixture, black_gets_promoted_at_start_of_board)
     {
-        EXPECT_CALL(p2, promote(_, _)).WillOnce(Return(Square{Queen{Colour::black}}));
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Queen{Colour::black}}));
 
-        auto g = Game{p1, p2, Board::with_pieces({
+        auto g = Game{driver, Board::with_pieces({
             {"A2", bpawn},
             {"D2", wpawn}
         })};

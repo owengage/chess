@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
-#include "player_fixture.h"
+#include "game_fixture.h"
 
 namespace chess
 {
@@ -10,13 +10,13 @@ namespace chess
         auto constexpr wknight = Square{Knight{Colour::white}};
     }
 
-    struct MoveKnightFixture : public PlayerFixture
+    struct MoveKnightFixture : public GameFixture
     {
         Game with_wknight_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wknight;
-            return Game{p1, p2, b};
+            return Game{driver, b};
         }
 
         bool try_move(Loc src, Loc dest)
@@ -47,7 +47,7 @@ namespace chess
         }
 
         b["A1"] = wknight;
-        auto g = Game{p1, p2, b};
+        auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("A1", "B3"));
     }

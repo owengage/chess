@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
-#include "player_fixture.h"
+#include "game_fixture.h"
 
 namespace chess
 {
@@ -10,13 +10,13 @@ namespace chess
         auto constexpr wrook = Square{Rook{Colour::white}};
     }
 
-    struct MoveRookFixture : public PlayerFixture
+    struct MoveRookFixture : public GameFixture
     {
         Game with_wrook_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wrook;
-            return Game{p1, p2, b};
+            return Game{driver, b};
         }
 
         bool try_move(Loc src, Loc dest)
@@ -40,7 +40,7 @@ namespace chess
 
     TEST_F(MoveRookFixture, cant_move_up_through_own_piece)
     {
-        auto game = Game{p1, p2, Board::with_pieces({
+        auto game = Game{driver, Board::with_pieces({
             {"C1", wrook},
             {"C5", wrook},
         })};
@@ -50,7 +50,7 @@ namespace chess
 
     TEST_F(MoveRookFixture, can_capture_up)
     {
-        auto game = Game{p1, p2, Board::with_pieces({
+        auto game = Game{driver, Board::with_pieces({
             {"C1", wrook},
             {"C5", Square{Rook{Colour::black}}}
         })};

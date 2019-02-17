@@ -2,8 +2,8 @@
 #include <cstdint>
 
 #include <chess/game.h>
-#include <chess/player.h>
 #include <chess/available_moves.h>
+#include <chess/driver.h>
 
 using chess::Loc;
 using chess::Game;
@@ -42,14 +42,13 @@ AssumedMoveToken::~AssumedMoveToken()
     game.m_history.pop_back();
 }
 
-Game::Game(Player & p1, Player & p2) : Game{p1, p2, Board::standard()}
+Game::Game(Driver & driver) : Game{driver, Board::standard()}
 {}
 
-Game::Game(Player & p1, Player & p2, Board b):
+Game::Game(Driver & driver, Board b):
     m_start{std::move(b)},
     m_history{},
-    m_player1{p1},
-    m_player2{p2}
+    m_driver{driver}
 {}
 
 Board Game::current() const
@@ -76,6 +75,7 @@ bool Game::move(Loc src, Loc dest)
         auto move = *move_it;
         handle_promotion(move);
         m_history.push_back(move);
+        handle_checkmate(move);
         return true;
     }
 
@@ -88,11 +88,6 @@ AssumedMoveToken Game::assume_move(Move const& move)
     return AssumedMoveToken{*this};
 }
 
-Player & Game::current_player()
-{
-    return (m_history.size() % 2 == 0) ? m_player1 : m_player2;
-}
-
 void Game::handle_promotion(chess::Move & move)
 {
     auto const y = move.dest.y();
@@ -100,17 +95,39 @@ void Game::handle_promotion(chess::Move & move)
 
     if ((y == Loc::side_size - 1 || y == 0) && std::holds_alternative<Pawn>(p))
     {
-        auto & player = current_player();
         auto colour = get_colour(p);
-        auto promotion = player.promote(*this, move.dest);
+        auto promotion = m_driver.promote(*this, move);
 
+        // FIXME: What if they returned empty.
         if (colour == get_colour(promotion) && !std::holds_alternative<Pawn>(promotion))
         {
             move.result[move.dest] = promotion;
         }
         else
         {
-            throw InvalidPlayerAction{"Promoted to invalid piece"};
+            throw InvalidDriverAction{"Promoted to invalid piece"};
+        }
+    }
+}
+
+bool Game::in_check()
+{
+    return true; // TODO
+}
+
+void Game::handle_checkmate(Move const& move)
+{
+    // Move has been added to game history. Are there any available moves left?
+    auto moves = available_moves(*this);
+    if (moves.empty())
+    {
+        if (move.caused_check)
+        {
+            m_driver.checkmate(*this, move);
+        }
+        else
+        {
+            m_driver.stalemate(*this, move);
         }
     }
 }

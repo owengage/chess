@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <chess/game.h>
 
-#include "player_fixture.h"
+#include "game_fixture.h"
 
 namespace chess
 {
@@ -10,13 +10,13 @@ namespace chess
         auto constexpr wbishop = Square{Bishop{Colour::white}};
     }
 
-    struct MoveBishopFixture : public PlayerFixture
+    struct MoveBishopFixture : public GameFixture
     {
         Game with_wbishop_at(Loc loc)
         {
             auto b = Board::blank();
             b[loc] = wbishop;
-            return Game{p1, p2, b};
+            return Game{driver, b};
         }
 
         bool try_move(Loc src, Loc dest)
@@ -73,7 +73,7 @@ namespace chess
 
     TEST_F(MoveBishopFixture, cant_move_through_own_piece)
     {
-        auto game = Game{p1, p2, Board::with_pieces({
+        auto game = Game{driver, Board::with_pieces({
             {"B2", wbishop},
             {"D4", wbishop},
         })};
@@ -83,7 +83,7 @@ namespace chess
 
     TEST_F(MoveBishopFixture, can_capture)
     {
-        auto game = Game{p1, p2, Board::with_pieces({
+        auto game = Game{driver, Board::with_pieces({
             {"B2", wbishop},
             {"D4", Square{Bishop{Colour::black}}}
         })};

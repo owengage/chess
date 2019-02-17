@@ -59,6 +59,9 @@ namespace chess {
 
             void add(Loc dest, Loc src);
 
+
+            void add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src);
+
             /**
              * Add a standard move or capture move, return if should stop.
              */
@@ -164,6 +167,15 @@ namespace chess {
             b[dest] = b[src];
             b[src] = Square{Empty{}};
             list.push_back({src, dest, b});
+        }
+
+        void PotentialMoves::add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src) {
+            Board b = game.current();
+            b[king_dest] = b[king_src];
+            b[king_src] = Square{Empty{}};
+            b[rook_dest] = b[rook_src];
+            b[rook_src] = Square{Empty{}};
+            list.push_back({king_src, king_dest, b});
         }
 
         bool PotentialMoves::add_standard(Loc dest, Loc src) {
@@ -290,7 +302,7 @@ namespace chess {
             add_direction(-1, -1, src);
         }
 
-        void PotentialMoves::generate_for(King, Loc src) {
+        void PotentialMoves::generate_for(King k, Loc src) {
             add_delta(0, 1, src);
             add_delta(1, 1, src);
             add_delta(1, 0, src);
@@ -299,6 +311,55 @@ namespace chess {
             add_delta(-1, -1, src);
             add_delta(-1, 0, src);
             add_delta(-1, 1, src);
+
+            auto empty_from_to = [this](Loc from_exclusive, Loc to_inclusive)
+            {
+                auto check_direction = from_exclusive.x() > to_inclusive.x() ? -1 : 1;
+                auto y = from_exclusive.y();
+                auto [x_min, x_max] = std::minmax({from_exclusive.x() + check_direction, to_inclusive.x()});
+
+                for (auto x = x_min; x <= x_max; ++x)
+                {
+                    if (!is_empty({x, y}))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            if (!has_moved(src))
+            {
+                auto board = game.current();
+                auto colour = get_colour(k);
+                auto left = Loc{0, src.y()};
+                auto right = Loc{Loc::side_size - 1, src.y()};
+                auto rook = Square{Rook{colour}};
+
+                if (board[left] == rook && !has_moved(left))
+                {
+                    auto king_src = src;
+                    auto king_dest = *Loc::add_delta(left, 1, 0);
+                    auto rook_dest = *Loc::add_delta(left, 2, 0);
+
+                    if (empty_from_to(king_src, king_dest))
+                    {
+                        add_castling(king_dest, king_src, rook_dest, left);
+                    }
+                }
+
+                if (board[right] == rook && !has_moved(right))
+                {
+                    auto king_src = src;
+                    auto king_dest = *Loc::add_delta(right, -1, 0);
+                    auto rook_dest = *Loc::add_delta(right, -2, 0);
+
+                    if (empty_from_to(king_src, king_dest))
+                    {
+                        add_castling(king_dest, king_src, rook_dest, right);
+                    }
+                }
+            }
         }
 
         void PotentialMoves::generate_for(Empty, Loc) {
@@ -310,21 +371,45 @@ namespace chess {
             return pm.retrieve();
         }
 
-        bool causes_mover_to_be_in_check(Game & game, Move const& move)
+        bool is_castling(Move const& move)
+        {
+            return std::holds_alternative<King>(move.result[move.dest]) && std::abs(move.src.x() - move.dest.x()) > 1;
+        }
+
+        bool causes_mover_to_be_in_check(Game & game, Move const& current_move)
         {
             // Must do before assuming the move.
             auto current_colour = ((game.history().size() % 2) == 0) ? Colour::white : Colour::black;
-
-            auto token = game.assume_move(move);
+            auto token = game.assume_move(current_move);
             auto king_loc = find_loc_of(game.current(), Square{King{current_colour}});
             auto potentials = potential_moves(game);
 
-            auto it = std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
+            bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
             {
                 return m.dest == king_loc;
             });
 
-            return it != end(potentials);
+            if (!in_check && is_castling(current_move))
+            {
+                // Determine squares that need to be checked.
+                auto vulnerable_squares = std::vector<Loc>{};
+                auto y = current_move.src.y();
+                auto x1 = current_move.src.x();
+                auto x2 = current_move.dest.x();
+                auto [x_begin, x_end] = std::minmax({x1, x2});
+
+                for (auto x = x_begin; x <= x_end; ++x)
+                {
+                    vulnerable_squares.emplace_back(x,y);
+                }
+
+                in_check |= end(potentials) != std::find_if(begin(potentials), end(potentials), [&current_move, &vulnerable_squares](Move enemy_move)
+                {
+                    return std::find(begin(vulnerable_squares), end(vulnerable_squares), enemy_move.dest) != end(vulnerable_squares);
+                });
+            }
+
+            return in_check;
         }
     }
 

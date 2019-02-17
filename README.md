@@ -1,8 +1,8 @@
 # C++ Chess engine WIP
 
-Make a chess game, make a chess engine.
+A chess game/engine written in C++. So far all chess moves have been encoded in the game, allowing a user to generate all posible moves allowable. This includes checking for en passant, castling, and check.
 
 ## TODOs
 
-* Castling
-* Engine...
+* Checkmate
+* Automated chess player

@@ -180,28 +180,28 @@ namespace chess
         EXPECT_EQ(wrook, g.current()["F1"]);
     }
 
-    TEST_F(MoveGeneralFixture, cant_queen_side_castle_with_piece_in_way)
-    {
-        auto b = Board::with_pieces({
-                {"H1", wrook},
-                {"D1", wking},
-                {"E1", wqueen},
-        });
-        auto g = Game{driver, b};
-
-        EXPECT_FALSE(g.move("D1", "G1"));
-    }
-
     TEST_F(MoveGeneralFixture, cant_king_side_castle_with_piece_in_way)
     {
         auto b = Board::with_pieces({
-                {"A1", wrook},
-                {"D1", wking},
-                {"B1", wqueen},
+                {"H1", wrook},
+                {"E1", wking},
+                {"F1", wqueen},
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("D1", "B1"));
+        EXPECT_FALSE(g.move("E1", "G1"));
+    }
+
+    TEST_F(MoveGeneralFixture, cant_queen_side_castle_with_piece_in_way)
+    {
+        auto b = Board::with_pieces({
+                {"A1", wrook},
+                {"E1", wking},
+                {"D1", wqueen},
+        });
+        auto g = Game{driver, b};
+
+        EXPECT_FALSE(g.move("E1", "B1"));
     }
 
     TEST_F(MoveGeneralFixture, move_causing_checkmate_calls_driver)

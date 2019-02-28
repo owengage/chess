@@ -65,6 +65,11 @@ std::vector<Move> const& Game::history() const
     return m_history;
 }
 
+Colour Game::current_turn() const
+{
+    return ((m_history.size() % 2) == 0) ? Colour::white : Colour::black;
+}
+
 bool Game::move(Loc src, Loc dest)
 {
     auto moves = get_moves_for(*this, src);

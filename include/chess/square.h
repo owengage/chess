@@ -12,7 +12,8 @@ namespace chess
 
     struct PieceCommon
     {
-        Colour colour;
+        Colour colour = {};
+        bool has_moved = false;
     };
 
     struct Empty {};

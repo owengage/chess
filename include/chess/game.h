@@ -30,6 +30,7 @@ namespace chess
         std::vector<Move> const& history() const;
 
         bool move(Loc src, Loc dest);
+        Colour current_turn() const;
 
         /**
          * Make a move that will be taken back once the returned token goes out of scope. No validation done.

@@ -97,7 +97,7 @@ namespace chess {
         PotentialMoves::PotentialMoves(Game const &game)
                 : game{game}, list{}
         {
-            auto current_colour = ((game.history().size() % 2) == 0) ? Colour::white : Colour::black;
+            auto current_colour = game.current_turn();
             auto board = game.current();
 
             for (Loc loc : Loc::all_squares())
@@ -385,7 +385,7 @@ namespace chess {
         bool causes_mover_to_be_in_check(Game & game, Move const& current_move)
         {
             // Must do before assuming the move.
-            auto current_colour = ((game.history().size() % 2) == 0) ? Colour::white : Colour::black;
+            auto current_colour = game.current_turn();
             auto token = game.assume_move(current_move);
             auto king_loc = find_loc_of(game.current(), Square{King{current_colour}});
             auto potentials = potential_moves(game);
@@ -421,7 +421,7 @@ namespace chess {
         bool caused_check(Game & game, Move & current_move)
         {
             // Must do before assuming the move.
-            auto opposite_colour = ((game.history().size() % 2) == 0) ? Colour::black : Colour::white;
+            auto opposite_colour = (game.current_turn() == Colour::white) ? Colour::black : Colour::white;
             auto token1 = game.assume_move(current_move); // make the move
             auto token2 = game.assume_move({"A1", "A1", game.current()}); // skip next move.
 

@@ -9,3 +9,4 @@ moves are available.
 * Stalemate through 'inactivity'
 * Better chess viewer
 * Automated chess player
+* Write Algebraic Notation or Portable Game Notation parser

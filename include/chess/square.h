@@ -33,5 +33,7 @@ namespace chess
 
     Colour get_colour(Square sq);
     bool is_colour(Square sq, Colour c);
+    bool has_moved(Square sq);
+    Colour flip_colour(Colour);
 
 }

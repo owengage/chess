@@ -11,37 +11,25 @@ namespace chess
     struct Game;
     struct Driver;
 
-    struct AssumedMoveToken
-    {
-        AssumedMoveToken(Game &);
-        ~AssumedMoveToken();
-        AssumedMoveToken(AssumedMoveToken const&) = delete;
-        void operator=(AssumedMoveToken const&) = delete;
-
-        Game & game;
-    };
-
     struct Game
     {
         Game(Driver &);
         Game(Driver &, Board);
 
         Board current() const;
-        std::vector<Move> const& history() const;
 
         bool move(Loc src, Loc dest);
-        Colour current_turn() const;
+        void force_move(Move);
 
-        /**
-         * Make a move that will be taken back once the returned token goes out of scope. No validation done.
-         */
-        AssumedMoveToken assume_move(Move const&);
+        Colour current_turn() const;
+        std::optional<Loc> const& last_move_destination() const;
+
     private:
-        Board m_start;
-        std::vector<Move> m_history;
+        Board m_board;
+        Colour m_turn;
+        std::optional<Loc> m_last_move_destination;
         Driver & m_driver;
 
-        bool in_check();
         void handle_promotion(Move &);
         void handle_checkmate(Move const&);
 

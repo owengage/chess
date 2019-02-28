@@ -167,6 +167,24 @@ namespace chess
         EXPECT_FALSE(g.move("B4", "A3")); // try en passant
     }
 
+    TEST_F(MovePawnFixture, cant_en_passant_if_pawn_did_not_move_two)
+    {
+        auto b = Board::with_pieces({
+                {"A2", wpawn},
+                {"B4", bpawn},
+                {"H2", wpawn},
+                {"H7", bpawn}
+        });
+
+        auto g = Game{driver, b};
+
+        g.move("A2", "A3");
+        g.move("H7", "H6");
+        g.move("A3", "A4");
+
+        EXPECT_FALSE(g.move("B4", "A3")); // try en passant
+    }
+
     TEST_F(MovePawnFixture, cant_jump_two_if_first_square_occupied)
     {
         auto b = Board::with_pieces({
@@ -180,7 +198,7 @@ namespace chess
 
     TEST_F(MovePawnFixture, white_gets_promoted_at_end_of_board)
     {
-        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Queen{Colour::white}}));
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Square{Queen{Colour::white}}));
 
         auto g = Game{driver, Board::with_pieces({
             {"A7", wpawn}
@@ -203,7 +221,7 @@ namespace chess
 
     TEST_F(MovePawnFixture, black_gets_promoted_at_start_of_board)
     {
-        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Queen{Colour::black}}));
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Square{Queen{Colour::black}}));
 
         auto g = Game{driver, Board::with_pieces({
             {"A2", bpawn},

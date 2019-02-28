@@ -139,13 +139,7 @@ namespace chess {
 
         bool PotentialMoves::has_moved(Loc loc) {
             auto p = game.current()[loc];
-            for (auto const &b : game.history()) {
-                if (b.result[loc] != p) {
-                    return true;
-                }
-            }
-
-            return false;
+            return !std::holds_alternative<Empty>(p) && chess::has_moved(p);
         }
 
         bool PotentialMoves::is_in_check(Board const& b, Colour current_colour) {
@@ -251,20 +245,21 @@ namespace chess {
             // en passant
             // If in the last move a pawn jumped 2 spaces, and we're in the position where if it moved just one we could
             // take it, we can move there and take the pawn that jumped 2 squares.
-            auto const &history = game.history();
-            if (!history.empty()) {
-                auto const &last_move = history.back();
-                bool last_move_was_pawn = std::holds_alternative<Pawn>(last_move.result[last_move.dest]);
+            auto const& current_board = game.current();
+
+            if (auto const& last_move_dest = game.last_move_destination(); last_move_dest)
+            {
+                bool last_move_was_pawn = std::holds_alternative<Pawn>(current_board[*last_move_dest]);
                 bool last_move_was_to_side_of_current =
-                        src.y() == last_move.dest.y() && std::abs(src.x() - last_move.dest.x()) == 1;
+                        src.y() == last_move_dest->y() && std::abs(src.x() - last_move_dest->x()) == 1;
 
                 if (last_move_was_pawn && last_move_was_to_side_of_current) {
-                    auto dest = Loc::add_delta(last_move.dest, 0, direction);
+                    auto dest = Loc::add_delta(*last_move_dest, 0, direction);
                     if (dest && is_empty(*dest)) {
                         Board b = game.current();
                         b[*dest] = b[src];
                         b[src] = Square{Empty{}};
-                        b[last_move.dest] = Square{Empty{}}; // capture en passant
+                        b[*last_move_dest] = Square{Empty{}}; // capture en passant
 
                         list.push_back({src, *dest, b});
                     }
@@ -382,11 +377,12 @@ namespace chess {
             return std::holds_alternative<King>(move.result[move.dest]) && std::abs(move.src.x() - move.dest.x()) > 1;
         }
 
-        bool causes_mover_to_be_in_check(Game & game, Move const& current_move)
+        bool causes_mover_to_be_in_check(Game game, Move const& current_move)
         {
             // Must do before assuming the move.
             auto current_colour = game.current_turn();
-            auto token = game.assume_move(current_move);
+            game.force_move(current_move);
+
             auto king_loc = find_loc_of(game.current(), Square{King{current_colour}});
             auto potentials = potential_moves(game);
 
@@ -418,12 +414,12 @@ namespace chess {
             return in_check;
         }
 
-        bool caused_check(Game & game, Move & current_move)
+        bool caused_check(Game game, Move & current_move)
         {
             // Must do before assuming the move.
             auto opposite_colour = (game.current_turn() == Colour::white) ? Colour::black : Colour::white;
-            auto token1 = game.assume_move(current_move); // make the move
-            auto token2 = game.assume_move({"A1", "A1", game.current()}); // skip next move.
+            game.force_move(current_move); // make the move
+            game.force_move({"A1", "A1", game.current()}); // skip next move.
 
             auto king_loc = find_loc_of(game.current(), Square{King{opposite_colour}});
             auto potentials = potential_moves(game);

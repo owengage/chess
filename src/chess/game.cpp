@@ -7,7 +7,6 @@
 
 using chess::Loc;
 using chess::Game;
-using chess::AssumedMoveToken;
 using chess::Player;
 using chess::Board;
 using chess::Square;
@@ -34,40 +33,28 @@ namespace
     }
 }
 
-AssumedMoveToken::AssumedMoveToken(Game & game) : game{game}
-{}
-
-AssumedMoveToken::~AssumedMoveToken()
-{
-    game.m_history.pop_back();
-}
-
 Game::Game(Driver & driver) : Game{driver, Board::standard()}
 {}
 
 Game::Game(Driver & driver, Board b):
-    m_start{std::move(b)},
-    m_history{},
+    m_board{std::move(b)},
+    m_turn{Colour::white},
     m_driver{driver}
 {}
 
 Board Game::current() const
 {
-    if (!m_history.empty())
-    {
-        return m_history.back().result;
-    }
-    return m_start;
-}
-
-std::vector<Move> const& Game::history() const
-{
-    return m_history;
+    return m_board;
 }
 
 Colour Game::current_turn() const
 {
-    return ((m_history.size() % 2) == 0) ? Colour::white : Colour::black;
+    return m_turn;
+}
+
+std::optional<Loc> const& Game::last_move_destination() const
+{
+    return m_last_move_destination;
 }
 
 bool Game::move(Loc src, Loc dest)
@@ -77,20 +64,20 @@ bool Game::move(Loc src, Loc dest)
 
     if (move_it != std::end(moves))
     {
-        auto move = *move_it;
-        handle_promotion(move);
-        m_history.push_back(move);
-        handle_checkmate(move);
+        force_move(*move_it);
         return true;
     }
 
     return false;
 }
 
-AssumedMoveToken Game::assume_move(Move const& move)
+void Game::force_move(Move move)
 {
-    m_history.push_back(move);
-    return AssumedMoveToken{*this};
+    handle_promotion(move);
+    m_turn = flip_colour(m_turn);
+    m_board = move.result;
+    m_last_move_destination = move.dest;
+    handle_checkmate(move);
 }
 
 void Game::handle_promotion(chess::Move & move)
@@ -115,24 +102,20 @@ void Game::handle_promotion(chess::Move & move)
     }
 }
 
-bool Game::in_check()
-{
-    return true; // TODO
-}
-
 void Game::handle_checkmate(Move const& move)
 {
+    // TODO without causing loop...
     // Move has been added to game history. Are there any available moves left?
-    auto moves = available_moves(*this);
-    if (moves.empty())
-    {
-        if (move.caused_check)
-        {
-            m_driver.checkmate(*this, move);
-        }
-        else
-        {
-            m_driver.stalemate(*this, move);
-        }
-    }
+//    auto moves = available_moves(*this);
+//    if (moves.empty())
+//    {
+//        if (move.caused_check)
+//        {
+//            m_driver.checkmate(*this, move);
+//        }
+//        else
+//        {
+//            m_driver.stalemate(*this, move);
+//        }
+//    }
 }

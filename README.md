@@ -11,14 +11,16 @@ itself it a cheap object. From there I can work on building the chess engine. I 
 to build a move tree out of the game objects.
  
 I need to
-* Update the `has_moved` bool for pieces in move generation so that things like en passant and castling can work.
-* Get checkmate working again. I had to break it to stop some infinite looping since game validates moves. 
 * Switch away from `std::variant` for storing state of a square. Move to custom type that stores all required
 information in a single byte, rather than 2 (three with new `has_moved` bool). This plus maybe shrinking `Loc` should
 allow a game object to fit in a cache line of the CPU.
+
 ## TODOs
 
+* Make promotion part of move generation so that they can be evaluated separately.
+* Speed up move generation. Benchmark!
 * Stalemate through 'inactivity'
 * Better chess viewer
 * Automated chess player
 * Write Algebraic Notation or Portable Game Notation parser
+

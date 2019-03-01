@@ -22,17 +22,15 @@ namespace chess
         void force_move(Move);
 
         Colour current_turn() const;
-        std::optional<Loc> const& last_move_destination() const;
+        std::optional<Loc> const& last_turn_pawn_double_jump_dest() const;
 
     private:
         Board m_board;
         Colour m_turn;
-        std::optional<Loc> m_last_move_destination;
+        std::optional<Loc> m_last_turn_pawn_double_jump_dest;
         Driver & m_driver;
 
         void handle_promotion(Move &);
         void handle_checkmate(Move const&);
-
-        friend struct AssumedMoveToken;
     };
 }

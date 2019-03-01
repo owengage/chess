@@ -7,4 +7,5 @@ add_library(chess
         game.cpp
         square.cpp
         available_moves.cpp
-        random_player.cpp)
+        basic_driver.cpp
+        )

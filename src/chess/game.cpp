@@ -31,6 +31,14 @@ namespace
 
         return moves;
     }
+
+    bool is_pawn_double_jump(Move const& move)
+    {
+        auto const& sq = move.result[move.dest];
+        auto const dy = move.src.y() - move.dest.y();
+
+        return std::holds_alternative<Pawn>(sq) && std::abs(dy) == 2;
+    }
 }
 
 Game::Game(Driver & driver) : Game{driver, Board::standard()}
@@ -52,9 +60,9 @@ Colour Game::current_turn() const
     return m_turn;
 }
 
-std::optional<Loc> const& Game::last_move_destination() const
+std::optional<Loc> const& Game::last_turn_pawn_double_jump_dest() const
 {
-    return m_last_move_destination;
+    return m_last_turn_pawn_double_jump_dest;
 }
 
 bool Game::move(Loc src, Loc dest)
@@ -65,6 +73,7 @@ bool Game::move(Loc src, Loc dest)
     if (move_it != std::end(moves))
     {
         force_move(*move_it);
+        handle_checkmate(*move_it);
         return true;
     }
 
@@ -76,8 +85,15 @@ void Game::force_move(Move move)
     handle_promotion(move);
     m_turn = flip_colour(m_turn);
     m_board = move.result;
-    m_last_move_destination = move.dest;
-    handle_checkmate(move);
+
+    if (is_pawn_double_jump(move))
+    {
+        m_last_turn_pawn_double_jump_dest = move.dest;
+    }
+    else
+    {
+        m_last_turn_pawn_double_jump_dest = std::nullopt;
+    }
 }
 
 void Game::handle_promotion(chess::Move & move)
@@ -104,18 +120,16 @@ void Game::handle_promotion(chess::Move & move)
 
 void Game::handle_checkmate(Move const& move)
 {
-    // TODO without causing loop...
-    // Move has been added to game history. Are there any available moves left?
-//    auto moves = available_moves(*this);
-//    if (moves.empty())
-//    {
-//        if (move.caused_check)
-//        {
-//            m_driver.checkmate(*this, move);
-//        }
-//        else
-//        {
-//            m_driver.stalemate(*this, move);
-//        }
-//    }
+    auto moves = available_moves(*this);
+    if (moves.empty())
+    {
+        if (move.caused_check)
+        {
+            m_driver.checkmate(*this, move);
+        }
+        else
+        {
+            m_driver.stalemate(*this, move);
+        }
+    }
 }

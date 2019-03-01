@@ -166,6 +166,7 @@ namespace chess {
             Board b = game.current();
             b[dest] = b[src];
             b[src] = Square{Empty{}};
+            set_moved(b[dest], true);
             list.push_back({src, dest, b});
         }
 
@@ -175,6 +176,10 @@ namespace chess {
             b[king_src] = Square{Empty{}};
             b[rook_dest] = b[rook_src];
             b[rook_src] = Square{Empty{}};
+
+            set_moved(b[rook_dest], true);
+            set_moved(b[king_dest], true);
+
             list.push_back({king_src, king_dest, b});
         }
 
@@ -247,19 +252,20 @@ namespace chess {
             // take it, we can move there and take the pawn that jumped 2 squares.
             auto const& current_board = game.current();
 
-            if (auto const& last_move_dest = game.last_move_destination(); last_move_dest)
+            if (auto const& last_move_dest = game.last_turn_pawn_double_jump_dest(); last_move_dest)
             {
-                bool last_move_was_pawn = std::holds_alternative<Pawn>(current_board[*last_move_dest]);
                 bool last_move_was_to_side_of_current =
                         src.y() == last_move_dest->y() && std::abs(src.x() - last_move_dest->x()) == 1;
 
-                if (last_move_was_pawn && last_move_was_to_side_of_current) {
+                if (last_move_was_to_side_of_current) {
                     auto dest = Loc::add_delta(*last_move_dest, 0, direction);
                     if (dest && is_empty(*dest)) {
                         Board b = game.current();
                         b[*dest] = b[src];
                         b[src] = Square{Empty{}};
                         b[*last_move_dest] = Square{Empty{}}; // capture en passant
+
+                        set_moved(b[*dest], true);
 
                         list.push_back({src, *dest, b});
                     }

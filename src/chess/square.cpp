@@ -9,8 +9,10 @@ using chess::Empty;
 
 namespace
 {
-    struct ColourVisitor {
-        Colour operator()(PieceCommon const &p) {
+    struct ColourVisitor
+    {
+        Colour operator()(PieceCommon const &p)
+        {
             return p.colour;
         }
 
@@ -20,14 +22,31 @@ namespace
         }
     };
 
-    struct HasMovedVisitor {
-        bool operator()(PieceCommon const &p) {
+    struct HasMovedVisitor
+    {
+        bool operator()(PieceCommon const &p)
+        {
             return p.has_moved;
         }
 
         bool operator()(Empty)
         {
             throw std::runtime_error{"Tried to check movement of empty square"};
+        }
+    };
+
+    struct SetMovedVisitor
+    {
+        bool moved;
+
+        void operator()(PieceCommon &p)
+        {
+            p.has_moved = moved;
+        }
+
+        void operator()(Empty)
+        {
+            throw std::runtime_error{"Tried to set movement of empty square"};
         }
     };
 }
@@ -50,4 +69,9 @@ bool chess::is_colour(Square sq, Colour c)
 bool chess::has_moved(Square sq)
 {
     return std::visit(HasMovedVisitor{}, sq);
+}
+
+void chess::set_moved(Square & sq, bool moved)
+{
+    std::visit(SetMovedVisitor{moved}, sq);
 }

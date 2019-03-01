@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <chess/square.h>
 
 namespace chess
@@ -7,7 +8,7 @@ namespace chess
     struct Game;
     struct Move;
 
-    struct InvalidDriverAction : public std::runtime_error
+    struct InvalidDriverAction : std::runtime_error
     {
         using std::runtime_error::runtime_error;
     };

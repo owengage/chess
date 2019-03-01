@@ -15,8 +15,8 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wpawn = Square{Pawn{Colour::white}};
-        auto constexpr bpawn = Square{Pawn{Colour::black}};
+        auto constexpr wpawn = Pawn(Colour::white);
+        auto constexpr bpawn = Pawn(Colour::black);
     }
 
     struct MovePawnFixture : public GameFixture
@@ -129,7 +129,7 @@ namespace chess
 
         g.move("A2", "A4");
         EXPECT_TRUE(g.move("B4", "A3")); // en passant
-        EXPECT_EQ(Square{Empty{}}, g.current()["A4"]); // should capture A4 pawn.
+        EXPECT_EQ(Empty(), g.current()["A4"]); // should capture A4 pawn.
         EXPECT_EQ(bpawn, g.current()["A3"]);
     }
 
@@ -143,7 +143,7 @@ namespace chess
 
         g.move("C2", "C4");
         EXPECT_TRUE(g.move("B4", "C3")); // en passant
-        EXPECT_EQ(Square{Empty{}}, g.current()["C4"]); // should capture A4 pawn.
+        EXPECT_EQ(Empty(), g.current()["C4"]); // should capture A4 pawn.
         EXPECT_EQ(bpawn, g.current()["C3"]);
     }
 
@@ -198,19 +198,19 @@ namespace chess
 
     TEST_F(MovePawnFixture, white_gets_promoted_at_end_of_board)
     {
-        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Square{Queen{Colour::white}}));
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Queen(Colour::white)));
 
         auto g = Game{driver, Board::with_pieces({
             {"A7", wpawn}
         })};
 
         g.move("A7", "A8");
-        EXPECT_EQ(Square{Queen{Colour::white}}, g.current()["A8"]);
+        EXPECT_EQ(Queen(Colour::white), g.current()["A8"]);
     }
 
     TEST_F(MovePawnFixture, promoting_piece_to_pawn_causes_exeception)
     {
-        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Square{Pawn{Colour::white}}));
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Pawn(Colour::white)));
 
         auto g = Game{driver, Board::with_pieces({
             {"A7", wpawn}
@@ -221,7 +221,7 @@ namespace chess
 
     TEST_F(MovePawnFixture, black_gets_promoted_at_start_of_board)
     {
-        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Square{Queen{Colour::black}}));
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Queen(Colour::black)));
 
         auto g = Game{driver, Board::with_pieces({
             {"A2", bpawn},
@@ -230,6 +230,6 @@ namespace chess
 
         g.move("D2", "D3");
         g.move("A2", "A1");
-        EXPECT_EQ(Square{Queen{Colour::black}}, g.current()["A1"]);
+        EXPECT_EQ(Queen(Colour::black), g.current()["A1"]);
     }
 }

@@ -10,16 +10,9 @@ using chess::Game;
 using chess::Player;
 using chess::Board;
 using chess::Square;
-using chess::Empty;
-using chess::PieceCommon;
-using chess::Pawn;
-using chess::Rook;
-using chess::Knight;
-using chess::Bishop;
-using chess::Queen;
-using chess::King;
 using chess::Colour;
 using chess::Move;
+using chess::SquareType;
 
 namespace
 {
@@ -37,7 +30,7 @@ namespace
         auto const& sq = move.result[move.dest];
         auto const dy = move.src.y() - move.dest.y();
 
-        return std::holds_alternative<Pawn>(sq) && std::abs(dy) == 2;
+        return (sq.type() == SquareType::pawn) && std::abs(dy) == 2;
     }
 }
 
@@ -101,13 +94,13 @@ void Game::handle_promotion(chess::Move & move)
     auto const y = move.dest.y();
     auto const p = move.result[move.dest];
 
-    if ((y == Loc::side_size - 1 || y == 0) && std::holds_alternative<Pawn>(p))
+    if ((y == Loc::side_size - 1 || y == 0) && (p.type() == SquareType::pawn))
     {
         auto colour = get_colour(p);
         auto promotion = m_driver.promote(*this, move);
 
         // FIXME: What if they returned empty.
-        if (colour == get_colour(promotion) && !std::holds_alternative<Pawn>(promotion))
+        if (colour == get_colour(promotion) && (promotion.type() != SquareType::pawn))
         {
             move.result[move.dest] = promotion;
         }

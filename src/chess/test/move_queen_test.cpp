@@ -7,7 +7,7 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wqueen = Square{Queen{Colour::white}};
+        auto constexpr wqueen = Queen(Colour::white);
     }
 
     struct MoveQueenFixture : public GameFixture
@@ -129,7 +129,7 @@ namespace chess
     {
         auto game = Game{driver, Board::with_pieces({
             {"B2", wqueen},
-            {"D4", Square{Queen{Colour::black}}}
+            {"D4", Queen(Colour::black)}
         })};
 
         EXPECT_TRUE(game.move("B2", "D4"));

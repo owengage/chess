@@ -10,7 +10,7 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wknight = Square{Knight{Colour::white}};
+        auto constexpr wknight = Knight(Colour::white);
     }
 
     struct MoveKnightFixture : public GameFixture
@@ -45,12 +45,12 @@ namespace chess
     {
         // FIXME: This is only necessary because the move generation force_move function handles promotion. Should
         // probably make this part of the move generation.
-        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Square{Queen{Colour::black}}));
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Queen(Colour::black)));
 
         auto b = Board::blank();
         for (auto loc : Loc::all_squares())
         {
-            b[loc] = Square{Pawn{Colour::black}};
+            b[loc] = Pawn(Colour::black);
         }
 
         b["A1"] = wknight;

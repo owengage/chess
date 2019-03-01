@@ -4,17 +4,6 @@ A chess game/engine written in C++. So far all chess moves have been encoded in 
 all possible moves allowable. This includes checking for en passant, castling, check, checkmate, and stalemate when no
 moves are available.
 
-## Current WIP
-
-Currently trying to rework the use of history. I want to remove storing the history of the game so that the game object
-itself it a cheap object. From there I can work on building the chess engine. I need the game to be small since I intend
-to build a move tree out of the game objects.
- 
-I need to
-* Switch away from `std::variant` for storing state of a square. Move to custom type that stores all required
-information in a single byte, rather than 2 (three with new `has_moved` bool). This plus maybe shrinking `Loc` should
-allow a game object to fit in a cache line of the CPU.
-
 ## TODOs
 
 * Make promotion part of move generation so that they can be evaluated separately.
@@ -23,4 +12,3 @@ allow a game object to fit in a cache line of the CPU.
 * Better chess viewer
 * Automated chess player
 * Write Algebraic Notation or Portable Game Notation parser
-

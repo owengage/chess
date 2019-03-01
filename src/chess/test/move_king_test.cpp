@@ -7,7 +7,7 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wking = Square{King{Colour::white}};
+        auto constexpr wking = King(Colour::white);
     }
 
 
@@ -43,7 +43,7 @@ namespace chess
     {
         auto game = Game{driver, Board::with_pieces({
             {"B2", wking},
-            {"B3", Square{Knight{Colour::black}}}
+            {"B3", Knight(Colour::black)}
         })};
 
         EXPECT_TRUE(game.move("B2", "B3"));

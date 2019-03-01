@@ -11,16 +11,16 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wknight = Square{Knight{Colour::white}};
-        auto constexpr wqueen = Square{Queen{Colour::white}};
-        auto constexpr wking = Square{King{Colour::white}};
-        auto constexpr wpawn = Square{Pawn{Colour::white}};
-        auto constexpr wrook = Square{Rook{Colour::white}};
-        auto constexpr bknight = Square{Knight{Colour::black}};
-        auto constexpr bking = Square{King{Colour::black}};
-        auto constexpr brook = Square{Rook{Colour::black}};
-        auto constexpr bpawn = Square{Pawn{Colour::black}};
-        auto constexpr empty = Square{Empty{}};
+        auto constexpr wknight = Knight(Colour::white);
+        auto constexpr wqueen = Queen(Colour::white);
+        auto constexpr wking = King(Colour::white);
+        auto constexpr wpawn = Pawn(Colour::white);
+        auto constexpr wrook = Rook(Colour::white);
+        auto constexpr bknight = Knight(Colour::black);
+        auto constexpr bking = King(Colour::black);
+        auto constexpr brook = Rook(Colour::black);
+        auto constexpr bpawn = Pawn(Colour::black);
+        auto constexpr empty = Empty();
     }
 
     struct MoveGeneralFixture : public GameFixture {};

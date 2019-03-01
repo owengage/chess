@@ -4,6 +4,8 @@
 #include <chess/text/print.h>
 
 namespace text = chess::text;
+using chess::Square;
+using chess::SquareType;
 
 namespace
 {
@@ -17,34 +19,67 @@ namespace
      *  specialisation then we just get whatever the basic version of the template is, rather than an error. With this
      *  struct version, it doesn't find value on the base template and so fails to compile.
      */
-    template<typename> struct BaseSymbol {};
-    template<> struct BaseSymbol<chess::Pawn> { static constexpr char value = 'p'; };
-    template<> struct BaseSymbol<chess::Rook> { static constexpr char value = 'r'; };
-    template<> struct BaseSymbol<chess::Knight> { static constexpr char value = 'n'; };
-    template<> struct BaseSymbol<chess::Bishop> { static constexpr char value = 'b'; };
-    template<> struct BaseSymbol<chess::King> { static constexpr char value = 'k'; };
-    template<> struct BaseSymbol<chess::Queen> { static constexpr char value = 'q'; };
-    template<> struct BaseSymbol<chess::Empty> { static constexpr char value = '.'; };
+//    template<typename> struct BaseSymbol {};
+//    template<> struct BaseSymbol<chess::Pawn> { static constexpr char value = 'p'; };
+//    template<> struct BaseSymbol<chess::Rook> { static constexpr char value = 'r'; };
+//    template<> struct BaseSymbol<chess::Knight> { static constexpr char value = 'n'; };
+//    template<> struct BaseSymbol<chess::Bishop> { static constexpr char value = 'b'; };
+//    template<> struct BaseSymbol<chess::King> { static constexpr char value = 'k'; };
+//    template<> struct BaseSymbol<chess::Queen> { static constexpr char value = 'q'; };
+//    template<> struct BaseSymbol<chess::Empty> { static constexpr char value = '.'; };
+//
+//    template<typename T>
+//    inline constexpr char base_symbol = BaseSymbol<T>::value;
+//
+//    struct PrinterVisitor
+//    {
+//        template<typename T>
+//        char operator()(T p)
+//        {
+//            auto sym = base_symbol<T>;
+//            auto coloured_sym = p.colour() == chess::Colour::white ? std::toupper(sym) : std::tolower(sym);
+//            return static_cast<char>(coloured_sym);
+//        }
+//
+//        char operator()(chess::Empty p)
+//        {
+//            auto sym = base_symbol<chess::Empty>;
+//            return sym;
+//        }
+//    };
 
-    template<typename T>
-    inline constexpr char base_symbol = BaseSymbol<T>::value;
-
-    struct PrinterVisitor
+    constexpr char base_symbol(Square const& sq)
     {
-        template<typename T>
-        char operator()(T p)
+        switch (sq.type())
         {
-            auto sym = base_symbol<T>;
-            auto coloured_sym = p.colour() == chess::Colour::white ? std::toupper(sym) : std::tolower(sym);
-            return static_cast<char>(coloured_sym);
+            case SquareType::empty:
+                throw std::runtime_error{"Tried to get base symbol for empty square."};
+            case SquareType::king:
+                return 'k';
+            case SquareType::pawn:
+                return 'p';
+            case SquareType::rook:
+                return 'r';
+            case SquareType::bishop:
+                return 'b';
+            case SquareType::knight:
+                return 'n';
+            case SquareType::queen:
+                return 'q';
+        }
+    }
+
+    char symbol(Square const& sq)
+    {
+        if (sq.type() == SquareType::empty)
+        {
+            return '.';
         }
 
-        char operator()(chess::Empty p)
-        {
-            auto sym = base_symbol<chess::Empty>;
-            return sym;
-        }
-    };
+        auto sym = base_symbol(sq);
+        auto coloured_sym = sq.colour() == chess::Colour::white ? std::toupper(sym) : std::tolower(sym);
+        return static_cast<char>(coloured_sym);
+    }
 }
 
 void text::print(std::ostream & os, Board const& board)
@@ -59,7 +94,7 @@ void text::print(std::ostream & os, Board const& board)
         for (int x = 0; x < Loc::side_size; ++x)
         {
             auto sq = board[{x,y}];
-            os << std::visit(PrinterVisitor{}, sq) << ' ';
+            os << symbol(sq) << ' ';
         }
         os << ' ' << y + 1 << '\n';
     }

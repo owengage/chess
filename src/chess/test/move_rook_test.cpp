@@ -7,7 +7,7 @@ namespace chess
 {
     namespace
     {
-        auto constexpr wrook = Square{Rook{Colour::white}};
+        auto constexpr wrook = Rook(Colour::white);
     }
 
     struct MoveRookFixture : public GameFixture
@@ -52,7 +52,7 @@ namespace chess
     {
         auto game = Game{driver, Board::with_pieces({
             {"C1", wrook},
-            {"C5", Square{Rook{Colour::black}}}
+            {"C5", Rook(Colour::black)}
         })};
 
         EXPECT_TRUE(game.move("C1", "C5"));

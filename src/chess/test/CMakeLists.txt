@@ -1,4 +1,5 @@
 add_executable(move_test
+        square_test.cpp
         move_pawn_test.cpp
         move_knight_test.cpp
         move_general_test.cpp

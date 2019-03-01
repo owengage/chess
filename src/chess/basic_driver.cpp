@@ -8,7 +8,7 @@ using chess::Square;
 Square BasicDriver::promote(Game const&, Move const& move)
 {
     auto const& sq = move.result[move.dest];
-    return Queen(get_colour(sq));
+    return Queen(sq.colour());
 }
 
 void BasicDriver::checkmate(Game const&, Move const&)

@@ -28,8 +28,4 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
         ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
         EXCLUDE_FROM_ALL)
 
-include_directories("${gtest_SOURCE_DIR}/include")
-include_directories("${gmock_SOURCE_DIR}/include")
-
-include_directories(include)
 add_subdirectory(src)

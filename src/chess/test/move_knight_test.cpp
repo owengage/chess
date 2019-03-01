@@ -43,10 +43,6 @@ namespace chess
 
     TEST_F(MoveKnightFixture, can_jump)
     {
-        // FIXME: This is only necessary because the move generation force_move function handles promotion. Should
-        // probably make this part of the move generation.
-        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Queen(Colour::black)));
-
         auto b = Board::blank();
         for (auto loc : Loc::all_squares())
         {

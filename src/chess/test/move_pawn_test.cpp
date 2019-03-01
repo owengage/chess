@@ -2,10 +2,8 @@
 #include <gmock/gmock.h>
 
 #include <chess/game.h>
-#include <chess/player.h>
 #include <chess/text/print.h>
 
-#include "player_mock.h"
 #include "game_fixture.h"
 
 using testing::_;
@@ -218,6 +216,32 @@ namespace chess
 
         EXPECT_THROW(g.move("A7", "A8"), InvalidDriverAction);
     }
+
+    TEST_F(MovePawnFixture, promoting_piece_to_empty_causes_exeception_for_white)
+    {
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Empty()));
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A7", wpawn}
+        })};
+
+        EXPECT_THROW(g.move("A7", "A8"), InvalidDriverAction);
+    }
+
+    TEST_F(MovePawnFixture, promoting_piece_to_empty_causes_exeception_for_black)
+    {
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Empty()));
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A5", wpawn},
+                {"A2", bpawn}
+        })};
+
+        g.move("A5", "A6");
+
+        EXPECT_THROW(g.move("A2", "A1"), InvalidDriverAction);
+    }
+
 
     TEST_F(MovePawnFixture, black_gets_promoted_at_start_of_board)
     {

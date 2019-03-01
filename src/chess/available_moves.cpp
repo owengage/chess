@@ -97,7 +97,7 @@ namespace chess {
             for (Loc loc : Loc::all_squares())
             {
                 auto sq = board[loc];
-                if (is_colour(sq, current_colour))
+                if (sq.colour() == current_colour)
                 {
                     generate_for(sq, loc);
                 }
@@ -146,20 +146,20 @@ namespace chess {
 
         bool PotentialMoves::is_capturable(Loc loc, Loc src) {
             auto const board = game.current();
-            auto src_colour = get_colour(board[src]);
-            return !is_empty(loc) && src_colour != get_colour(board[loc]);
+            auto src_colour = board[src].colour();
+            return !is_empty(loc) && src_colour != board[loc].colour();
         }
 
         bool PotentialMoves::has_moved(Loc loc) {
             auto p = game.current()[loc];
-            return p.type() != SquareType::empty && chess::has_moved(p);
+            return p.type() != SquareType::empty && p.has_moved();
         }
 
         void PotentialMoves::add(Loc dest, Loc src) {
             Board b = game.current();
             b[dest] = b[src];
             b[src] = Empty();
-            set_moved(b[dest]);
+            b[dest].set_moved();
             list.push_back({src, dest, b});
         }
 
@@ -170,8 +170,8 @@ namespace chess {
             b[rook_dest] = b[rook_src];
             b[rook_src] = Empty();
 
-            set_moved(b[rook_dest]);
-            set_moved(b[king_dest]);
+            b[rook_dest].set_moved();
+            b[king_dest].set_moved();
 
             list.push_back({king_src, king_dest, b});
         }
@@ -258,7 +258,7 @@ namespace chess {
                         b[src] = Empty();
                         b[*last_move_dest] = Empty(); // capture en passant
 
-                        set_moved(b[*dest]);
+                        b[*dest].set_moved();
 
                         list.push_back({src, *dest, b});
                     }
@@ -331,7 +331,7 @@ namespace chess {
             if (!has_moved(src))
             {
                 auto board = game.current();
-                auto colour = get_colour(k);
+                auto colour = k.colour();
                 auto left = Loc{0, src.y()};
                 auto right = Loc{Loc::side_size - 1, src.y()};
                 auto rook = Rook(colour);

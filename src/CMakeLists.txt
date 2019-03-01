@@ -1,8 +1,12 @@
 add_subdirectory(chess)
 
-add_executable(play
-        main.cpp ../include/chess/text/print.h ../include/chess/game.h)
+add_executable(play)
+
+target_sources(play
+        PRIVATE
+        main.cpp)
 
 target_link_libraries(play
+        PRIVATE
         chess
         chess-text)

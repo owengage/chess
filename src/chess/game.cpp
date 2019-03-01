@@ -65,6 +65,7 @@ bool Game::move(Loc src, Loc dest)
 
     if (move_it != std::end(moves))
     {
+        handle_promotion(*move_it);
         force_move(*move_it);
         handle_checkmate(*move_it);
         return true;
@@ -75,7 +76,6 @@ bool Game::move(Loc src, Loc dest)
 
 void Game::force_move(Move move)
 {
-    handle_promotion(move);
     m_turn = flip_colour(m_turn);
     m_board = move.result;
 
@@ -96,11 +96,11 @@ void Game::handle_promotion(chess::Move & move)
 
     if ((y == Loc::side_size - 1 || y == 0) && (p.type() == SquareType::pawn))
     {
-        auto colour = get_colour(p);
+        auto colour = p.colour();
         auto promotion = m_driver.promote(*this, move);
+        auto type = promotion.type();
 
-        // FIXME: What if they returned empty.
-        if (colour == get_colour(promotion) && (promotion.type() != SquareType::pawn))
+        if (type != SquareType::empty && type != SquareType::pawn && colour == promotion.colour())
         {
             move.result[move.dest] = promotion;
         }

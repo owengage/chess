@@ -17,6 +17,6 @@ int main() {
     text::print(std::cout, game.current());
     std::cout << "Size of square is " << sizeof(chess::Square) << std::endl;
     std::cout << "Size of board is " << sizeof(chess::Board) << std::endl;
-    std::cout << "Size of board is " << sizeof(chess::Game) << std::endl;
+    std::cout << "Size of game is " << sizeof(chess::Game) << std::endl;
     return 0;
 }

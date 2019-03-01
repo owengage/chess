@@ -13,7 +13,7 @@ namespace
     {
         Colour operator()(PieceCommon const &p)
         {
-            return p.colour;
+            return p.colour();
         }
 
         Colour operator()(Empty)
@@ -26,7 +26,7 @@ namespace
     {
         bool operator()(PieceCommon const &p)
         {
-            return p.has_moved;
+            return p.has_moved();
         }
 
         bool operator()(Empty)
@@ -37,11 +37,9 @@ namespace
 
     struct SetMovedVisitor
     {
-        bool moved;
-
         void operator()(PieceCommon &p)
         {
-            p.has_moved = moved;
+            p.set_moved();
         }
 
         void operator()(Empty)
@@ -71,7 +69,7 @@ bool chess::has_moved(Square sq)
     return std::visit(HasMovedVisitor{}, sq);
 }
 
-void chess::set_moved(Square & sq, bool moved)
+void chess::set_moved(Square & sq)
 {
-    std::visit(SetMovedVisitor{moved}, sq);
+    std::visit(SetMovedVisitor{}, sq);
 }

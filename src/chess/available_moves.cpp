@@ -166,7 +166,7 @@ namespace chess {
             Board b = game.current();
             b[dest] = b[src];
             b[src] = Square{Empty{}};
-            set_moved(b[dest], true);
+            set_moved(b[dest]);
             list.push_back({src, dest, b});
         }
 
@@ -177,8 +177,8 @@ namespace chess {
             b[rook_dest] = b[rook_src];
             b[rook_src] = Square{Empty{}};
 
-            set_moved(b[rook_dest], true);
-            set_moved(b[king_dest], true);
+            set_moved(b[rook_dest]);
+            set_moved(b[king_dest]);
 
             list.push_back({king_src, king_dest, b});
         }
@@ -235,7 +235,7 @@ namespace chess {
         }
 
         void PotentialMoves::generate_for(Pawn p, Loc src) {
-            int direction = p.colour == Colour::white ? 1 : -1;
+            int direction = p.colour() == Colour::white ? 1 : -1;
 
             add_delta_empty(0, direction, src);
             add_delta_capture(1, direction, src);
@@ -265,7 +265,7 @@ namespace chess {
                         b[src] = Square{Empty{}};
                         b[*last_move_dest] = Square{Empty{}}; // capture en passant
 
-                        set_moved(b[*dest], true);
+                        set_moved(b[*dest]);
 
                         list.push_back({src, *dest, b});
                     }

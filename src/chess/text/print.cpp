@@ -35,7 +35,7 @@ namespace
         char operator()(T p)
         {
             auto sym = base_symbol<T>;
-            auto coloured_sym = p.colour == chess::Colour::white ? std::toupper(sym) : std::tolower(sym);
+            auto coloured_sym = p.colour() == chess::Colour::white ? std::toupper(sym) : std::tolower(sym);
             return static_cast<char>(coloured_sym);
         }
 

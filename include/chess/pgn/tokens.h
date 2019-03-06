@@ -1,61 +1,45 @@
 #pragma once
 
 #include <chess/square.h>
-#include <chess/pgn/parser.h>
 
 #include <string>
 #include <optional>
 
 namespace chess::pgn
 {
-    struct Token
-    {
-        virtual ~Token() = default;
-        virtual void accept(Parser &) const = 0;
-    };
-
-    template<typename Derived>
-    struct TokenCommon : Token
-    {
-        void accept(Parser & parser) const override
-        {
-            parser.visit(static_cast<Derived const&>(*this));
-        }
-    };
-
-    struct TagPairOpen : TokenCommon<TagPairOpen>
+    struct TagPairOpen
     {
     };
 
-    struct TagPairName : TokenCommon<TagPairName>
+    struct TagPairName
     {
         explicit TagPairName(std::string name) : name{std::move(name)} {}
         std::string name;
     };
 
-    struct TagPairValue : TokenCommon<TagPairValue>
+    struct TagPairValue
     {
         explicit TagPairValue(std::string value) : value{std::move(value)} {}
         std::string value;
     };
 
-    struct TagPairClose : TokenCommon<TagPairClose>
+    struct TagPairClose
     {
     };
 
-    struct MoveNumber : TokenCommon<MoveNumber>
+    struct MoveNumber
     {
         explicit MoveNumber(int number) : number{number} {}
         int number;
     };
 
-    struct ColourIndicator : TokenCommon<ColourIndicator>
+    struct ColourIndicator
     {
         explicit ColourIndicator(Colour colour) : colour{colour} {}
         Colour colour;
     };
 
-    struct SanMove : TokenCommon<SanMove>
+    struct SanMove
     {
         SanMove() = default;
         std::optional<int> dest_x;
@@ -71,10 +55,10 @@ namespace chess::pgn
         bool queen_side_castle = false;
     };
 
-    struct SyntaxError : TokenCommon<SyntaxError>
+    struct SyntaxError
     {};
 
-    struct TerminationMarker : TokenCommon<TerminationMarker>
+    struct TerminationMarker
     {
         enum class Type
         {

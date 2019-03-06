@@ -35,12 +35,11 @@ namespace chess::pgn
             MOCK_METHOD1(visit, void(TerminationMarker const&));
         };
 
-        int feed(Parser & parser, Lexer & lexer)
+        int feed(Lexer & lexer)
         {
             int count = 0;
             while (auto token = lexer.next())
             {
-                token->accept(parser);
                 count++;
             }
 
@@ -149,48 +148,51 @@ namespace chess::pgn
     TEST(lexer_test, empty_string_produces_no_tokens)
     {
         auto stream = std::istringstream{""};
-        auto lexer = Lexer{stream};
-        EXPECT_EQ(nullptr, lexer.next());
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+        EXPECT_EQ(false, lexer.next());
     }
 
     TEST(lexer_test, open_tagpair_produces_tagpair_open_token)
     {
         auto stream = std::istringstream{"["};
-        auto lexer = Lexer{stream};
+        auto parser = MockParser{};
+        EXPECT_CALL(parser, visit(An<TagPairOpen const&>()));
+
+        auto lexer = Lexer{stream, parser};
         auto token = lexer.next();
 
         ASSERT_TRUE(token);
-        EXPECT_TRUE(dynamic_cast<TagPairOpen*>(token.get()));
     }
 
     TEST(lexer_test, tag_pair_produces_tokens)
     {
         auto stream = std::istringstream{R"([name "value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(An<TagPairOpen const&>()));
         EXPECT_CALL(parser, visit(tag_name("name")));
         EXPECT_CALL(parser, visit(tag_value("value")));
         EXPECT_CALL(parser, visit(An<TagPairClose const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, whitespace_in_tag_pair_ignored)
     {
         auto stream = std::istringstream{R"(  [  name    "value" ]  )"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(An<TagPairOpen const&>()));
         EXPECT_CALL(parser, visit(tag_name("name")));
         EXPECT_CALL(parser, visit(tag_value("value")));
         EXPECT_CALL(parser, visit(An<TagPairClose const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, multiple_tag_pairs_parsed_in_order)
@@ -198,9 +200,9 @@ namespace chess::pgn
         auto stream = std::istringstream{R"(
             [name1 "value1"]
             [name2 "value2"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(An<TagPairOpen const&>()));
         EXPECT_CALL(parser, visit(tag_name("name1")));
@@ -211,128 +213,128 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(tag_value("value2")));
         EXPECT_CALL(parser, visit(An<TagPairClose const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_with_space_handled)
     {
         auto stream = std::istringstream{R"([name "some value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(tag_value("some value")));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_with_literal_quote_is_decoded)
     {
         auto stream = std::istringstream{R"([name "some \"value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(tag_value("some \"value")));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_with_literal_backslash_is_decoded)
     {
         auto stream = std::istringstream{R"([name "some \\value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(tag_value("some \\value")));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_with_broken_escape_should_not_lex)
     {
         auto stream = std::istringstream{R"([name "some \a value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(A<TagPairValue const&>())).Times(0);
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_with_escape_at_end_of_value_should_not_lex)
     {
         auto stream = std::istringstream{R"([name "some value\"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(A<TagPairValue const&>())).Times(0);
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_value_without_quote_mark_start_should_not_lex)
     {
         auto stream = std::istringstream{R"([name some value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(A<TagPairValue const&>())).Times(0);
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, tag_name_can_include_underscores)
     {
         auto stream = std::istringstream{R"([longer__name "some value"])"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(tag_name("longer__name")));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, move_number_should_lex)
     {
         auto stream = std::istringstream{R"(1.)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
         EXPECT_CALL(parser, visit(move_number(1)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, long_move_number)
     {
         auto stream = std::istringstream{R"(123.)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
         EXPECT_CALL(parser, visit(move_number(123)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, white_move_indicator)
     {
         auto stream = std::istringstream{R"(123.)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, black_move_indicator)
     {
         auto stream = std::istringstream{R"(123...)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
         EXPECT_CALL(parser, visit(colour_indicator(Colour::black)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_for_basic_pawn_movement)
     {
         auto stream = std::istringstream{R"(1. a3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -341,15 +343,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::pawn),
                 Field(&SanMove::capture, false)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_for_basic_knight_movement)
     {
         auto stream = std::istringstream{R"(1. Na3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -358,15 +360,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, false)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_disambiguation_file)
     {
         auto stream = std::istringstream{R"(1. Nba3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -375,15 +377,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, false)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_disambiguation_rank)
     {
         auto stream = std::istringstream{R"(1. N4a3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -392,15 +394,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, false)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_disambiguation_file_and_rank)
     {
         auto stream = std::istringstream{R"(1. Nc4a3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -409,15 +411,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, false)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_capture)
     {
         auto stream = std::istringstream{R"(1. Nxa3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -426,15 +428,15 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, true)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_capture_and_src_square)
     {
         auto stream = std::istringstream{R"(1. Nc4xa3)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
@@ -443,58 +445,58 @@ namespace chess::pgn
                 Field(&SanMove::type, SquareType::knight),
                 Field(&SanMove::capture, true)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_causing_check)
     {
         auto stream = std::istringstream{R"(1. a3+)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
                 Field(&SanMove::check, true)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_causing_checkmate)
     {
         auto stream = std::istringstream{R"(1. a3#)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 0),
                 Field(&SanMove::dest_y, 2),
                 Field(&SanMove::checkmate, true)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_promotion)
     {
         auto stream = std::istringstream{R"(1. g8=Q+)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, 6),
                 Field(&SanMove::dest_y, 7),
                 Field(&SanMove::check, true),
                 Field(&SanMove::promotion, SquareType::queen)
         ))));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_king_side_castle)
     {
         auto stream = std::istringstream{R"(1. O-O a6)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, std::nullopt),
@@ -505,15 +507,15 @@ namespace chess::pgn
         ))));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_queen_side_castle)
     {
         auto stream = std::istringstream{R"(1. O-O-O a6)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
                 Field(&SanMove::dest_x, std::nullopt),
@@ -523,15 +525,15 @@ namespace chess::pgn
                 Field(&SanMove::queen_side_castle, true)
         ))));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_several_moves_produces_tokens)
     {
         auto stream = std::istringstream{R"(1. g8=Q+ a6 2. b2 a5)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
@@ -540,15 +542,15 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_black_first_doesnt_expect_two_moves)
     {
         auto stream = std::istringstream{R"(1... a6 2. b2 b5)"};
-        auto lexer = Lexer{stream};
-
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::black)));
@@ -558,118 +560,118 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
 
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_invalid_symbol_fails)
     {
         auto stream = std::istringstream{R"(1. i1)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(A<SyntaxError const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_bad_file_at_end_causes_syntax_error)
     {
         auto stream = std::istringstream{R"(1. a3d)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(A<SyntaxError const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_bad_dest_rank_capture_gives_syntax_error)
     {
         auto stream = std::istringstream{R"(1. x33)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(A<SyntaxError const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_bad_dest_rank_gives_syntax_error)
     {
         auto stream = std::istringstream{R"(1. 33)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(move_number(33)));
         EXPECT_CALL(parser, visit(A<SyntaxError const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_comment_should_parse)
     {
         auto stream = std::istringstream{R"(1. a2 {Something boring} a6)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_inline_unterminated_comment_should_have_syntax_error)
     {
         auto stream = std::istringstream{R"(1. a2 {Something bo)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         InSequence dummy;
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
         EXPECT_CALL(parser, visit(A<SanMove const&>()));
         EXPECT_CALL(parser, visit(A<SyntaxError const&>()));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_white_win)
     {
         auto stream = std::istringstream{R"(1. a2 1-0)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::white_win)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_draw)
     {
         auto stream = std::istringstream{R"(1. a2 1/2-1/2)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_with_in_progress_termination)
     {
         auto stream = std::istringstream{R"(1. a2 *)"};
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
 
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::in_progress)));
-        feed(parser, lexer);
+        feed(lexer);
     }
 
     TEST(lexer_test, movetext_wiki_example)
@@ -693,10 +695,55 @@ namespace chess::pgn
             Nf2 42. g4 Bd3 43. Re6 1/2-1/2
         )"};
 
-        auto lexer = Lexer{stream};
         auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
-        auto count = feed(parser, lexer);
-        EXPECT_EQ(43 * 4 + 7 * 4, count); // 43 moves 4 tokens each, 7 tags 4 tokens each.
+
+        auto count = feed(lexer);
+        auto expected_count = 43 * 4 + 7 * 4; // 43 moves 4 tokens each, 7 tags 4 tokens each.
+        EXPECT_EQ(expected_count - 1, count); // sub one as we don't go around the loop for last token
     }
+
+    TEST(lexer_test, DISABLED_pgn_example_1)
+    {
+        auto stream = std::istringstream{R"(
+            [Event "2.f"][Site "Leningrad"]
+            [Date "1974.??.??"][Round "3"][White "Karpov, Anatoly"]
+            [Black "Spassky, Boris"][Result "1-0"][ECO "E91"]
+            [WhiteElo "2700"][BlackElo "2650"][Annotator "JvR"]
+            [PlyCount "109"]
+            [EventDate "1974.??.??"]
+
+            1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 c5
+            7. O-O Bg4 $5 { Spassky chooses a sharp opening.} 8. d5 Nbd7
+            9. Bg5 a6 10. a4 Qc7 11. Qd2 Rae8 12. h3 Bxf3 13. Bxf3 e6 $5
+            14. b3 Kh8 15. Be3 Ng8 16. Be2 e5 $5 17. g4 Qd8
+            18. Kg2 Qh4 $5 {Black takes the initiative on the kingside.}
+            19. f3 ({ The tactical justification is} 19. Bg5 Bh6)
+            19... Bh6 $2 { Tal, Keres and Botvinnik condemn this provocative move} ({and prefer} 19... f5)
+            20. g5 Bg7 21. Bf2 Qf4 22. Be3 Qh4 23. Qe1 $1 Qxe1 24. Rfxe1 h6
+            25. h4 hxg5 $2 ({A defence line against an attack on the queenside creates}
+            25... Ra8 26. Reb1 Rfb8 27. b4 Bf8 28. bxc5 Nxc5) 26. hxg5 Ne7 27. a5 f6
+            28. Reb1 fxg5 29. b4 $1 Nf5 $5 30. Bxg5 $1 ({Keres analyses} 30. exf5 e4
+            31. Bd2 exf3+ 32. Bxf3 gxf5 { Black has counter-play.})
+            30... Nd4 31. bxc5 Nxc5 32. Rb6 Bf6 33. Rh1+ $1 Kg7 34. Bh6+ Kg8
+            35. Bxf8 Rxf8 36. Rxd6 Kg7 37. Bd1 Be7 ({Tal mentions} 37... Bd8
+            38. Na4 Bc7 39. Nxc5 Bxd6 40. Nxb7 {and 41.c5. White wins.}) 38. Rb6 Bd8
+            39. Rb1 Rf7 40. Na4 Nd3 41. Nb6 g5 42. Nc8 Nc5 43. Nd6 Rd7 44. Nf5+ Nxf5
+            45. exf5 e4 46. fxe4 Nxe4 47. Ba4 Re7 48. Rbe1 Nc5 49. Rxe7+ Bxe7 50. Bc2 Bd8
+            51. Ra1 Kf6 52. d6 Nd7 53. Rb1 Ke5 54. Rd1 Kf4 55. Re1 1-0
+        )"};
+
+        auto parser = PrintParser{};
+        auto lexer = Lexer{stream, parser};
+
+        //EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
+
+        auto count = feed(lexer);
+        //auto expected_count = 43 * 4 + 7 * 4; // 43 moves 4 tokens each, 7 tags 4 tokens each.
+        //EXPECT_EQ(expected_count - 1, count); // sub one as we don't go around the loop for last token
+    }
+
+
 }

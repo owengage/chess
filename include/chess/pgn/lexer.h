@@ -1,17 +1,17 @@
 #pragma once
 
-#include <chess/pgn/token.h>
+#include <chess/pgn/tokens.h>
+#include <chess/pgn/parser.h>
 
 #include <iosfwd>
-#include <memory>
 
 namespace chess::pgn
 {
     struct Lexer
     {
-        Lexer(std::istream &);
+        Lexer(std::istream &, Parser &);
 
-        std::unique_ptr<Token> next();
+        bool next();
 
     private:
         enum class State
@@ -28,16 +28,16 @@ namespace chess::pgn
 
         State m_state;
         std::istream & m_stream;
+        Parser & m_parser;
 
-        std::unique_ptr<Token> consume_tag_open_or_movetext();
-        std::unique_ptr<Token> consume_tag_open();
-        std::unique_ptr<Token> consume_tag_name();
-        std::unique_ptr<Token> consume_tag_value();
-        std::unique_ptr<Token> consume_tag_close();
-        std::unique_ptr<Token> consume_movetext();
-        std::unique_ptr<Token> consume_colour_indicator();
-        std::unique_ptr<Token> consume_comment();
-
-        std::unique_ptr<Token> san_from_text(std::string text);
+        bool consume_tag_open_or_movetext();
+        bool consume_tag_open();
+        bool consume_tag_name();
+        bool consume_tag_value();
+        bool consume_tag_close();
+        bool consume_movetext();
+        bool consume_colour_indicator();
+        bool consume_comment();
+        bool san_from_text(std::string text);
     };
 }

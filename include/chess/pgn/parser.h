@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chess/pgn/token_forward.h>
+#include <chess/pgn/tokens.h>
 
 namespace chess::pgn
 {

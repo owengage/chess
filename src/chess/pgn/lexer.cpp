@@ -1,12 +1,11 @@
 #include <chess/pgn/lexer.h>
-#include <chess/pgn/token.h>
+#include <chess/pgn/tokens.h>
 
 #include <istream>
 #include <algorithm>
 
 using chess::SquareType;
 using chess::pgn::Lexer;
-using chess::pgn::Token;
 using chess::pgn::SanMove;
 using chess::pgn::TerminationMarker;
 
@@ -113,9 +112,9 @@ namespace
         return san.king_side_castle || san.queen_side_castle;
     }
 
-    std::unique_ptr<Token> get_termination_marker(std::string const& text)
+    std::optional<TerminationMarker> get_termination_marker(std::string const& text)
     {
-        auto marker = std::make_unique<TerminationMarker>();
+        auto marker = std::make_optional<TerminationMarker>();
         if (text == "1-0")
         {
             marker->type = TerminationMarker::Type::white_win;
@@ -134,17 +133,20 @@ namespace
         }
         else
         {
-            marker = nullptr;
+            marker = std::nullopt;
         }
 
         return marker;
     }
 }
 
-Lexer::Lexer(std::istream & stream) : m_state{State::expect_tag_open_or_movetext}, m_stream{stream}
+Lexer::Lexer(std::istream & stream, Parser & parser) :
+        m_state{State::expect_tag_open_or_movetext},
+        m_stream{stream},
+        m_parser{parser}
 {}
 
-std::unique_ptr<Token> Lexer::next()
+bool Lexer::next()
 {
     consume_whitespace(m_stream);
 
@@ -154,7 +156,8 @@ std::unique_ptr<Token> Lexer::next()
         if (m_state == State::expect_colour_indicator)
         {
             m_state = State::error;
-            return std::make_unique<SyntaxError>();
+            m_parser.visit(SyntaxError{});
+            return false;
         }
         m_state = State::done;
     }
@@ -175,97 +178,105 @@ std::unique_ptr<Token> Lexer::next()
             return consume_colour_indicator();
         case State::error:
         case State::done:
-            return nullptr;
+            return false;
     }
 }
 
-std::unique_ptr<Token> Lexer::san_from_text(std::string text)
+bool Lexer::san_from_text(std::string text)
 {
-    auto san = std::make_unique<SanMove>();
+    auto san = SanMove{};
 
-    if (handle_castling(*san, text))
+    if (handle_castling(san, text))
     {
-        return san;
+        m_parser.visit(san);
+        return true;
     }
 
     if (auto marker = get_termination_marker(text); marker)
     {
+        m_parser.visit(*marker);
         m_state = State::done;
-        return marker;
+        return false;
     }
 
-    san->type = extract_type(text);
-    san->check = extract_check(text);
-    san->checkmate = extract_checkmate(text);
-    san->promotion = extract_promotion(text);
+    san.type = extract_type(text);
+    san.check = extract_check(text);
+    san.checkmate = extract_checkmate(text);
+    san.promotion = extract_promotion(text);
 
     // Destination is always present
     if (is_rank(text.back()))
     {
-        san->dest_y = text.back() - '1';
+        san.dest_y = text.back() - '1';
         text.pop_back();
     }
     else
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 
     if (is_file(text.back()))
     {
-        san->dest_x = text.back() - 'a';
+        san.dest_x = text.back() - 'a';
         text.pop_back();
     }
     else
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 
     if (text.empty())
     {
-        return san;
+        m_parser.visit(san);
+        return true;
     }
 
     if (text.back() == 'x')
     {
-        san->capture = true;
+        san.capture = true;
         text.pop_back();
     }
 
     if (text.empty())
     {
-        return san;
+        m_parser.visit(san);
+        return true;
     }
 
     if (is_file(text.back()))
     {
-        san->src_x = text.back() - 'a';
+        san.src_x = text.back() - 'a';
         text.pop_back();
     }
     else if (is_rank(text.back()))
     {
-        san->src_y = text.back() - '1';
+        san.src_y = text.back() - '1';
         text.pop_back();
     }
 
     if (text.empty())
     {
-        return san;
+        m_parser.visit(san);
+        return true;
     }
 
     // If we've got this far then the previous character should have been a rank, and we now
     // expect a file.
     if (is_file(text.back()))
     {
-        san->src_x = text.back() - 'a';
+        san.src_x = text.back() - 'a';
         text.pop_back();
     }
 
-    return san;
+    m_parser.visit(san);
+    return true;
 }
 
-std::unique_ptr<Token> Lexer::consume_tag_open_or_movetext()
+bool Lexer::consume_tag_open_or_movetext()
 {
     auto const ch = m_stream.peek();
 
@@ -279,32 +290,34 @@ std::unique_ptr<Token> Lexer::consume_tag_open_or_movetext()
     }
 }
 
-std::unique_ptr<Token> Lexer::consume_tag_open()
+bool Lexer::consume_tag_open()
 {
     auto const ch = m_stream.get();
 
     if (ch == '[')
     {
         m_state = State::expect_tag_name;
-        return std::make_unique<TagPairOpen>();
+        m_parser.visit(TagPairOpen{});
+        return true;
     }
     else
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 }
 
-std::unique_ptr<Token> Lexer::consume_movetext()
+bool Lexer::consume_movetext()
 {
     auto ch = m_stream.peek();
     auto str = std::string{};
 
     if (ch == '{')
     {
-        if (auto error = consume_comment(); error)
+        if (auto should_continue = consume_comment(); !should_continue)
         {
-            return error;
+            return false;
         }
         consume_whitespace(m_stream);
     }
@@ -341,15 +354,17 @@ std::unique_ptr<Token> Lexer::consume_movetext()
         catch (std::exception const& e)
         {
             m_state = State::error;
-            return std::make_unique<SyntaxError>();
+            m_parser.visit(SyntaxError{});
+            return false;
         }
 
         m_state = State::expect_colour_indicator;
-        return std::make_unique<MoveNumber>(number);
+        m_parser.visit(MoveNumber{number});
+        return true;
     }
 }
 
-std::unique_ptr<Token> Lexer::consume_tag_name()
+bool Lexer::consume_tag_name()
 {
     auto ch = m_stream.get();
     auto name = std::string{};
@@ -361,10 +376,11 @@ std::unique_ptr<Token> Lexer::consume_tag_name()
     }
 
     m_state = State::expect_tag_value;
-    return std::make_unique<TagPairName>(std::move(name));
+    m_parser.visit(TagPairName{std::move(name)});
+    return true;
 }
 
-std::unique_ptr<Token> Lexer::consume_comment()
+bool Lexer::consume_comment()
 {
     auto ch = m_stream.get();
 
@@ -373,15 +389,16 @@ std::unique_ptr<Token> Lexer::consume_comment()
         if (ch == -1)
         {
             m_state = State::error;
-            return std::make_unique<SyntaxError>();
+            m_parser.visit(SyntaxError{});
+            return false;
         }
         ch = m_stream.get();
     }
 
-    return nullptr;
+    return true;
 }
 
-std::unique_ptr<Token> Lexer::consume_colour_indicator()
+bool Lexer::consume_colour_indicator()
 {
     auto ch = m_stream.get();
     auto count = 0;
@@ -406,14 +423,16 @@ std::unique_ptr<Token> Lexer::consume_colour_indicator()
     else
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 
     m_state = State::expect_movetext;
-    return std::make_unique<ColourIndicator>(colour);
+    m_parser.visit(ColourIndicator{colour});
+    return true;
 }
 
-std::unique_ptr<Token> Lexer::consume_tag_value()
+bool Lexer::consume_tag_value()
 {
     auto ch = m_stream.get();
     auto value = std::string{};
@@ -421,8 +440,8 @@ std::unique_ptr<Token> Lexer::consume_tag_value()
     if (ch != '"')
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
-
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 
     ch = m_stream.get();
@@ -435,7 +454,8 @@ std::unique_ptr<Token> Lexer::consume_tag_value()
             if (ch != '"' && ch != '\\')
             {
                 m_state = State::error;
-                return std::make_unique<SyntaxError>();
+                m_parser.visit(SyntaxError{});
+                return false;
             }
         }
 
@@ -446,23 +466,27 @@ std::unique_ptr<Token> Lexer::consume_tag_value()
     if (ch == ']')
     {
         m_state = State::error;
-        return std::make_unique<SyntaxError>();
+        m_parser.visit(SyntaxError{});
+        return false;
     }
 
     m_state = State::expect_tag_close;
-    return std::make_unique<TagPairValue>(value);
+    m_parser.visit(TagPairValue{value});
+    return true;
 }
 
-std::unique_ptr<Token> Lexer::consume_tag_close()
+bool Lexer::consume_tag_close()
 {
     auto const ch = m_stream.get();
 
     if (ch == ']')
     {
         m_state = State::expect_tag_open_or_movetext;
-        return std::make_unique<TagPairClose>();
+        m_parser.visit(TagPairClose{});
+        return true;
     }
 
     m_state = State::error;
-    return std::make_unique<SyntaxError>();
+    m_parser.visit(SyntaxError{});
+    return false;
 }

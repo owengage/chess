@@ -31,7 +31,7 @@ namespace chess
     {
         auto g = Game{driver};
         EXPECT_TRUE(g.move("A2", "A3"));
-        EXPECT_EQ(wpawn, g.current()["A3"]);
+        EXPECT_EQ(wpawn, g.board()["A3"]);
     }
 
     TEST_F(MovePawnFixture, cant_move_white_pawn_left_right_down)
@@ -127,8 +127,8 @@ namespace chess
 
         g.move("A2", "A4");
         EXPECT_TRUE(g.move("B4", "A3")); // en passant
-        EXPECT_EQ(Empty(), g.current()["A4"]); // should capture A4 pawn.
-        EXPECT_EQ(bpawn, g.current()["A3"]);
+        EXPECT_EQ(Empty(), g.board()["A4"]); // should capture A4 pawn.
+        EXPECT_EQ(bpawn, g.board()["A3"]);
     }
 
     TEST_F(MovePawnFixture, en_passant_right)
@@ -141,8 +141,8 @@ namespace chess
 
         g.move("C2", "C4");
         EXPECT_TRUE(g.move("B4", "C3")); // en passant
-        EXPECT_EQ(Empty(), g.current()["C4"]); // should capture A4 pawn.
-        EXPECT_EQ(bpawn, g.current()["C3"]);
+        EXPECT_EQ(Empty(), g.board()["C4"]); // should capture A4 pawn.
+        EXPECT_EQ(bpawn, g.board()["C3"]);
     }
 
     TEST_F(MovePawnFixture, cant_en_passant_if_move_inbetween)
@@ -203,7 +203,34 @@ namespace chess
         })};
 
         g.move("A7", "A8");
-        EXPECT_EQ(Queen(Colour::white), g.current()["A8"]);
+        EXPECT_EQ(Queen(Colour::white), g.board()["A8"]);
+    }
+
+    TEST_F(MovePawnFixture, black_gets_promoted_at_end_of_board)
+    {
+        EXPECT_CALL(driver, promote(_, _)).WillRepeatedly(Return(Rook(Colour::black)));
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A2", wpawn},
+                {"B2", bpawn}
+        })};
+
+        g.move("A2", "A3");
+        EXPECT_TRUE(g.move("B2", "B1"));
+
+        EXPECT_EQ(Rook(Colour::black), g.board()["B1"]);
+    }
+
+    TEST_F(MovePawnFixture, white_cant_get_promoted_if_piece_in_way)
+    {
+        EXPECT_CALL(driver, promote(_, _)).Times(0);
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A7", wpawn},
+                {"A8", bpawn}
+        })};
+
+        EXPECT_FALSE(g.move("A7", "A8"));
     }
 
     TEST_F(MovePawnFixture, promoting_piece_to_pawn_causes_exeception)
@@ -254,6 +281,6 @@ namespace chess
 
         g.move("D2", "D3");
         g.move("A2", "A1");
-        EXPECT_EQ(Queen(Colour::black), g.current()["A1"]);
+        EXPECT_EQ(Queen(Colour::black), g.board()["A1"]);
     }
 }

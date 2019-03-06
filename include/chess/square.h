@@ -44,7 +44,9 @@ namespace chess
         constexpr void set_moved() { m_data |= move_mask; }
 
         constexpr Colour colour() const { return (m_data & colour_mask) == colour_mask ? Colour::white : Colour::black; }
+
         constexpr SquareType type() const { return static_cast<SquareType>(m_data & type_mask); }
+        constexpr void set_type(SquareType type) { m_data &= ~type_mask; m_data |= static_cast<std::byte>(type); }
     private:
         static std::byte constexpr type_mask   {0b0000'0111};
         static std::byte constexpr colour_mask {0b1000'0000};

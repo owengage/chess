@@ -16,7 +16,7 @@ namespace chess
         Game(Driver &);
         Game(Driver &, Board);
 
-        Board current() const;
+        Board board() const;
 
         bool move(Loc src, Loc dest);
         void force_move(Move);

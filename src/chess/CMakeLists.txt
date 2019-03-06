@@ -1,4 +1,5 @@
 add_subdirectory(text)
+add_subdirectory(pgn)
 add_subdirectory(test)
 
 add_library(chess)

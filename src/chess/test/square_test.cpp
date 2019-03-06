@@ -7,6 +7,11 @@ namespace chess
     auto constexpr white = Colour::white;
     auto constexpr black = Colour::black;
 
+    TEST(square_test, should_be_one_byte)
+    {
+        static_assert(sizeof(Square) == 1);
+    }
+
     TEST(square_test, piece_made_with_colour_should_equal_that_colour)
     {
         EXPECT_EQ(white, Pawn(white).colour());
@@ -51,5 +56,12 @@ namespace chess
     TEST(square_test, different_types_should_not_be_equal)
     {
         EXPECT_NE(Pawn(white), Rook(white));
+    }
+
+    TEST(square_test, setting_type_should_cause_type_to_change)
+    {
+        auto p = Pawn(white);
+        p.set_type(SquareType::rook);
+        EXPECT_EQ(SquareType::rook, p.type());
     }
 }

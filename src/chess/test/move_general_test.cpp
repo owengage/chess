@@ -33,8 +33,8 @@ namespace chess
         auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("C2", "D4"));
-        EXPECT_EQ(wknight, g.current()["D4"]);
-        EXPECT_EQ(empty, g.current()["C2"]);
+        EXPECT_EQ(wknight, g.board()["D4"]);
+        EXPECT_EQ(empty, g.board()["C2"]);
     }
 
     TEST_F(MoveGeneralFixture, cant_capture_own_piece)
@@ -45,8 +45,8 @@ namespace chess
         auto g = Game{driver, b};
 
         EXPECT_FALSE(g.move("C2", "D4"));
-        EXPECT_EQ(wknight, g.current()["D4"]);
-        EXPECT_EQ(wknight, g.current()["C2"]);
+        EXPECT_EQ(wknight, g.board()["D4"]);
+        EXPECT_EQ(wknight, g.board()["C2"]);
     }
 
     TEST_F(MoveGeneralFixture, cant_make_move_if_leaves_player_in_check)
@@ -92,8 +92,8 @@ namespace chess
         auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "B1"));
-        EXPECT_EQ(wking, g.current()["B1"]);
-        EXPECT_EQ(wrook, g.current()["C1"]);
+        EXPECT_EQ(wking, g.board()["B1"]);
+        EXPECT_EQ(wrook, g.board()["C1"]);
     }
 
     TEST_F(MoveGeneralFixture, cant_king_side_castle_while_king_in_check)
@@ -176,8 +176,8 @@ namespace chess
         auto g = Game{driver, b};
 
         EXPECT_TRUE(g.move("D1", "G1"));
-        EXPECT_EQ(wking, g.current()["G1"]);
-        EXPECT_EQ(wrook, g.current()["F1"]);
+        EXPECT_EQ(wking, g.board()["G1"]);
+        EXPECT_EQ(wrook, g.board()["F1"]);
     }
 
     TEST_F(MoveGeneralFixture, cant_king_side_castle_with_piece_in_way)

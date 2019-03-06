@@ -43,7 +43,7 @@ Game::Game(Driver & driver, Board b):
     m_driver{driver}
 {}
 
-Board Game::current() const
+Board Game::board() const
 {
     return m_board;
 }
@@ -91,10 +91,9 @@ void Game::force_move(Move move)
 
 void Game::handle_promotion(chess::Move & move)
 {
-    auto const y = move.dest.y();
     auto const p = move.result[move.dest];
 
-    if ((y == Loc::side_size - 1 || y == 0) && (p.type() == SquareType::pawn))
+    if (move.is_promotion)
     {
         auto colour = p.colour();
         auto promotion = m_driver.promote(*this, move);

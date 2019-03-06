@@ -4,9 +4,18 @@ A chess game/engine written in C++. So far all chess moves have been encoded in 
 all possible moves allowable. This includes checking for en passant, castling, check, checkmate, and stalemate when no
 moves are available.
 
+## Current work
+
+I'm writing a PGN parser. Once this is done I should be able to throw lots of real chess games at my library as a sort
+of extensive test suite. I'm splitting this into at least two parts. 
+
+One part is lexing the PGN, while PGN isn't too complicated, when it comes to verifying each move you actually need to
+keep track of the game to resolve ambiguity. For example the "movetext" `Ka3` is valid, but if you're halfway through
+a game it isn't obvious if there is really a knight that can move there--unless you track the game. So turning the PGN
+into high-level tokens will make writing a parser powered by my `Game` class a lot simpler, which is the second part.
+
 ## TODOs
 
-* Make promotion part of move generation so that they can be evaluated separately.
 * Speed up move generation. Benchmark!
 * Stalemate through 'inactivity'
 * Better chess viewer

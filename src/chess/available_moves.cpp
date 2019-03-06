@@ -37,6 +37,9 @@ namespace chess {
             void generate_for_queen(Loc);
             void generate_for_king(Square, Loc);
 
+            void generate_en_passant(Square, Loc);
+            void generate_promotions(Square, Loc);
+
             /**
              * Location is an empty square/
              */
@@ -92,7 +95,7 @@ namespace chess {
                 : game{game}, list{}
         {
             auto current_colour = game.current_turn();
-            auto board = game.current();
+            auto board = game.board();
 
             for (Loc loc : Loc::all_squares())
             {
@@ -141,22 +144,22 @@ namespace chess {
         }
 
         bool PotentialMoves::is_empty(Loc loc) {
-            return game.current()[loc] == Empty();
+            return game.board()[loc] == Empty();
         }
 
         bool PotentialMoves::is_capturable(Loc loc, Loc src) {
-            auto const board = game.current();
+            auto const board = game.board();
             auto src_colour = board[src].colour();
             return !is_empty(loc) && src_colour != board[loc].colour();
         }
 
         bool PotentialMoves::has_moved(Loc loc) {
-            auto p = game.current()[loc];
+            auto p = game.board()[loc];
             return p.type() != SquareType::empty && p.has_moved();
         }
 
         void PotentialMoves::add(Loc dest, Loc src) {
-            Board b = game.current();
+            Board b = game.board();
             b[dest] = b[src];
             b[src] = Empty();
             b[dest].set_moved();
@@ -164,7 +167,7 @@ namespace chess {
         }
 
         void PotentialMoves::add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src) {
-            Board b = game.current();
+            Board b = game.board();
             b[king_dest] = b[king_src];
             b[king_src] = Empty();
             b[rook_dest] = b[rook_src];
@@ -218,7 +221,7 @@ namespace chess {
         }
 
         void PotentialMoves::remove_checked(Colour current_colour) {
-            auto king_loc = find_loc_of(game.current(), King(current_colour));
+            auto king_loc = find_loc_of(game.board(), King(current_colour));
 
             auto new_end = std::remove_if(begin(list), end(list), [this, &king_loc](Move m) {
                 return m.dest == king_loc;
@@ -230,9 +233,14 @@ namespace chess {
         void PotentialMoves::generate_for_pawn(Square p, Loc src) {
             int direction = p.colour() == Colour::white ? 1 : -1;
 
-            add_delta_empty(0, direction, src);
             add_delta_capture(1, direction, src);
             add_delta_capture(-1, direction, src);
+
+            // Only add square ahead if not at the end of the board. Promotion move dealt with specially.
+            if (auto dest = Loc::add_delta(src, 0, direction); dest && (dest->y() != Loc::side_size - 1 && dest->y() != 0))
+            {
+                add_delta_empty(0, direction, src);
+            }
 
             // Can move two if hasn't moved before and first space free.
             auto jump_one = Loc::add_delta(src, 0, direction);
@@ -240,10 +248,44 @@ namespace chess {
                 add_delta_empty(0, 2 * direction, src);
             }
 
-            // en passant
+            generate_en_passant(p, src);
+            generate_promotions(p, src);
+        }
+
+        void PotentialMoves::generate_promotions(Square p, Loc src)
+        {
+            int direction = p.colour() == Colour::white ? 1 : -1;
+            auto dest = Loc::add_delta(src, 0, direction);
+
+            // Must be a promotion if we're going to land on either end of the board.
+            if (dest && (dest->y() == Loc::side_size - 1 || dest->y() == 0))
+            {
+                // TODO: Test cant promote if piece in way
+                if (is_empty(*dest))
+                {
+                    auto board = game.board();
+                    board[*dest] = board[src];
+                    board[src] = Empty();
+
+                    board[*dest].set_type(SquareType::rook);
+                    list.push_back({src, *dest, board, true, true});
+                    board[*dest].set_type(SquareType::bishop);
+                    list.push_back({src, *dest, board, true, true});
+                    board[*dest].set_type(SquareType::knight);
+                    list.push_back({src, *dest, board, true, true});
+                    board[*dest].set_type(SquareType::queen);
+                    list.push_back({src, *dest, board, true, true});
+                }
+            }
+        }
+
+        void PotentialMoves::generate_en_passant(Square p, Loc src)
+        {
             // If in the last move a pawn jumped 2 spaces, and we're in the position where if it moved just one we could
             // take it, we can move there and take the pawn that jumped 2 squares.
-            auto const& current_board = game.current();
+
+            int direction = p.colour() == Colour::white ? 1 : -1;
+            auto const& current_board = game.board();
 
             if (auto const& last_move_dest = game.last_turn_pawn_double_jump_dest(); last_move_dest)
             {
@@ -253,7 +295,7 @@ namespace chess {
                 if (last_move_was_to_side_of_current) {
                     auto dest = Loc::add_delta(*last_move_dest, 0, direction);
                     if (dest && is_empty(*dest)) {
-                        Board b = game.current();
+                        Board b = game.board();
                         b[*dest] = b[src];
                         b[src] = Empty();
                         b[*last_move_dest] = Empty(); // capture en passant
@@ -330,7 +372,7 @@ namespace chess {
 
             if (!has_moved(src))
             {
-                auto board = game.current();
+                auto board = game.board();
                 auto colour = k.colour();
                 auto left = Loc{0, src.y()};
                 auto right = Loc{Loc::side_size - 1, src.y()};
@@ -379,7 +421,7 @@ namespace chess {
             auto current_colour = game.current_turn();
             game.force_move(current_move);
 
-            auto king_loc = find_loc_of(game.current(), King(current_colour));
+            auto king_loc = find_loc_of(game.board(), King(current_colour));
             auto potentials = potential_moves(game);
 
             bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
@@ -415,9 +457,9 @@ namespace chess {
             // Must do before assuming the move.
             auto opposite_colour = (game.current_turn() == Colour::white) ? Colour::black : Colour::white;
             game.force_move(current_move); // make the move
-            game.force_move({"A1", "A1", game.current()}); // skip next move.
+            game.force_move({"A1", "A1", game.board()}); // skip next move.
 
-            auto king_loc = find_loc_of(game.current(), King(opposite_colour));
+            auto king_loc = find_loc_of(game.board(), King(opposite_colour));
             auto potentials = potential_moves(game);
 
             bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)

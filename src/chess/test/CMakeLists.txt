@@ -1,3 +1,7 @@
+#
+# move_test
+#
+
 add_executable(move_test)
 
 target_include_directories(move_test
@@ -14,7 +18,8 @@ target_sources(move_test
         move_rook_test.cpp
         move_bishop_test.cpp
         move_queen_test.cpp
-        move_king_test.cpp)
+        move_king_test.cpp
+        available_moves_test.cpp)
 
 target_link_libraries(move_test
         PRIVATE

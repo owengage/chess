@@ -11,5 +11,6 @@ namespace chess
         Loc dest;
         Board result;
         bool caused_check = false;
+        bool is_promotion = false;
     };
 }

@@ -313,18 +313,29 @@ bool Lexer::consume_movetext()
     auto ch = m_stream.peek();
     auto str = std::string{};
 
+    if (ch == '$')
+    {
+        return consume_dollar_indicator();
+    }
+
     if (ch == '{')
     {
-        if (auto should_continue = consume_comment(); !should_continue)
-        {
-            return false;
-        }
-        consume_whitespace(m_stream);
+        return consume_comment();
+    }
+
+    if (ch == '(')
+    {
+        return consume_open_alternative();
+    }
+
+    if (ch == ')')
+    {
+        return consume_close_alternative();
     }
 
     ch = m_stream.get();
 
-    while (!isspace(ch) && ch != '.' && ch != -1)
+    while (!isspace(ch) && ch != '.' && ch != ')' && ch != '(' && ch != -1)
     {
         str += static_cast<char>(ch);
         ch = m_stream.get();
@@ -397,6 +408,62 @@ bool Lexer::consume_comment()
 
     return true;
 }
+
+bool Lexer::consume_dollar_indicator()
+{
+    auto ch = m_stream.get();
+
+    if (ch != '$')
+    {
+        m_state = State::error;
+        m_parser.visit(SyntaxError{});
+        return false;
+    }
+
+    ch = m_stream.get();
+
+    while (isspace(ch) && ch != -1)
+    {
+        ch = m_stream.get();
+    }
+
+    return true;
+}
+
+bool Lexer::consume_open_alternative()
+{
+    auto ch = m_stream.get();
+
+    if (ch == '(')
+    {
+        m_parser.visit(AlternativeOpen{});
+        return true;
+    }
+    else
+    {
+        m_state = State::error;
+        m_parser.visit(SyntaxError{});
+        return false;
+    }
+}
+
+bool Lexer::consume_close_alternative()
+{
+    auto ch = m_stream.get();
+
+    if (ch == ')')
+    {
+        m_parser.visit(AlternativeClose{});
+        return true;
+    }
+    else
+    {
+        m_state = State::error;
+        m_parser.visit(SyntaxError{});
+        return false;
+    }
+}
+
 
 bool Lexer::consume_colour_indicator()
 {

@@ -38,6 +38,9 @@ namespace chess::pgn
         bool consume_movetext();
         bool consume_colour_indicator();
         bool consume_comment();
+        bool consume_dollar_indicator();
+        bool consume_open_alternative();
+        bool consume_close_alternative();
         bool san_from_text(std::string text);
     };
 }

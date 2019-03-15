@@ -42,12 +42,13 @@ namespace chess::pgn
     struct SanMove
     {
         SanMove() = default;
+
         std::optional<int> dest_x;
         std::optional<int> dest_y;
         std::optional<int> src_x;
         std::optional<int> src_y;
-        SquareType type;
         std::optional<SquareType> promotion;
+        SquareType type = SquareType::empty;
         bool capture = false;
         bool check = false;
         bool checkmate = false;
@@ -56,6 +57,12 @@ namespace chess::pgn
     };
 
     struct SyntaxError
+    {};
+
+    struct AlternativeOpen
+    {};
+
+    struct AlternativeClose
     {};
 
     struct TerminationMarker

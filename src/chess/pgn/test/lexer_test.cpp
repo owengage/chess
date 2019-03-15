@@ -31,6 +31,8 @@ namespace chess::pgn
             MOCK_METHOD1(visit, void(MoveNumber const&));
             MOCK_METHOD1(visit, void(ColourIndicator const&));
             MOCK_METHOD1(visit, void(SanMove const&));
+            MOCK_METHOD1(visit, void(AlternativeOpen const&));
+            MOCK_METHOD1(visit, void(AlternativeClose const&));
             MOCK_METHOD1(visit, void(SyntaxError const&));
             MOCK_METHOD1(visit, void(TerminationMarker const&));
         };
@@ -644,6 +646,20 @@ namespace chess::pgn
         feed(lexer);
     }
 
+    TEST(lexer_test, comment_with_whitespace_at_start_parses)
+    {
+        auto stream = std::istringstream{R"(1. a2 { Something boring } a6)"};
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
+        InSequence dummy;
+        EXPECT_CALL(parser, visit(move_number(1)));
+        EXPECT_CALL(parser, visit(colour_indicator(Colour::white)));
+        EXPECT_CALL(parser, visit(A<SanMove const&>()));
+        EXPECT_CALL(parser, visit(A<SanMove const&>()));
+        feed(lexer);
+    }
+
     TEST(lexer_test, movetext_with_white_win)
     {
         auto stream = std::istringstream{R"(1. a2 1-0)"};
@@ -701,11 +717,12 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
 
         auto count = feed(lexer);
-        auto expected_count = 43 * 4 + 7 * 4; // 43 moves 4 tokens each, 7 tags 4 tokens each.
+        auto expected_count = 43 * 4 + 7 * 4 + 1;
+        // 43 moves 4 tokens each, 7 tags 4 tokens each. One comment.
         EXPECT_EQ(expected_count - 1, count); // sub one as we don't go around the loop for last token
     }
 
-    TEST(lexer_test, DISABLED_pgn_example_1)
+    TEST(lexer_test, pgn_example_1)
     {
         auto stream = std::istringstream{R"(
             [Event "2.f"][Site "Leningrad"]
@@ -735,15 +752,51 @@ namespace chess::pgn
             51. Ra1 Kf6 52. d6 Nd7 53. Rb1 Ke5 54. Rd1 Kf4 55. Re1 1-0
         )"};
 
-        auto parser = PrintParser{};
+        auto parser = MockParser{};
         auto lexer = Lexer{stream, parser};
 
-        //EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
+        EXPECT_CALL(parser, visit(A<AlternativeOpen const&>())).Times(5);
+        EXPECT_CALL(parser, visit(A<AlternativeClose const&>())).Times(5);
+        EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::white_win)));
 
-        auto count = feed(lexer);
-        //auto expected_count = 43 * 4 + 7 * 4; // 43 moves 4 tokens each, 7 tags 4 tokens each.
-        //EXPECT_EQ(expected_count - 1, count); // sub one as we don't go around the loop for last token
+        feed(lexer);
     }
 
+    TEST(lexer_test, pgn_example_2)
+    {
+        auto stream = std::istringstream{R"(
+            [Event "London"]
+            [Site "London"]
+            [Date "1856.??.??"]
+            [EventDate "?"]
+            [Round "?"]
+            [Result "1-0"]
+            [White "Cunningham"]
+            [Black "Thomas Wilson Barnes"]
+            [ECO "C01"]
+            [WhiteElo "?"]
+            [BlackElo "?"]
+            [PlyCount "115"]
+
+                1.e4 e6 2.d4 d5 3.exd5 exd5 4.Nf3 Nf6 5.Be3 Bd6 6.Bd3 O-O
+                7.O-O Be6 8.Ng5 Bg4 9.f3 Bh5 10.Qd2 b6 11.Qf2 Nbd7 12.Nd2 c5
+                13.c3 Qc7 14.g4 Bg6 15.Bxg6 hxg6 16.Rac1 Rae8 17.Rfe1 Rxe3
+                18.Rxe3 cxd4 19.Rd3 Ne5 20.Rxd4 Bc5 21.Qf1 Nc6 22.Nb3 Nxd4
+                23.cxd4 Bxd4+ 24.Nxd4 Qf4 25.Nc6 Qxg5 26.Ne7+ Kh8 27.Re1 Qh4
+                28.Re5 Rd8 29.Qd3 Qh3 30.g5 Ng4 31.Re2 d4 32.Rg2 Ne3 33.Rg3
+                Qe6 34.Qe4 Nf5 35.Rh3+ Nh6 36.Qxe6 fxe6 37.Kf2 Kh7 38.Ke1 Rd7
+                39.Nc6 Rc7 40.Ne5 Rc2 41.Nd3 a5 42.f4 b5 43.Kd1 Rg2 44.Kc1 b4
+                45.gxh6 gxh6 46.Nc5 Re2 47.Rd3 e5 48.fxe5 Rxh2 49.Rxd4 Re2
+                50.Nd3 g5 51.Kd1 Rg2 52.e6 Kg7 53.Re4 Kf8 54.Ne5 b3 55.axb3
+                Rxb2 56.Ng6+ Ke8 57.Rc4 Kd8 58.e7+ 1-0
+        )"};
+
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
+        EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::white_win)));
+
+        feed(lexer);
+    }
 
 }

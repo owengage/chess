@@ -15,6 +15,8 @@ namespace chess::pgn
         virtual void visit(MoveNumber const&) = 0;
         virtual void visit(ColourIndicator const&) = 0;
         virtual void visit(SanMove const&) = 0;
+        virtual void visit(AlternativeOpen const&) = 0;
+        virtual void visit(AlternativeClose const&) = 0;
         virtual void visit(SyntaxError const&) = 0;
         virtual void visit(TerminationMarker const&) = 0;
     };

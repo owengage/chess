@@ -26,8 +26,6 @@ namespace chess
 
     private:
         Board m_board;
-        Colour m_turn;
-        std::optional<Loc> m_last_turn_pawn_double_jump_dest;
         Driver & m_driver;
 
         void handle_promotion(Move &);

@@ -39,7 +39,6 @@ Game::Game(Driver & driver) : Game{driver, Board::standard()}
 
 Game::Game(Driver & driver, Board b):
     m_board{std::move(b)},
-    m_turn{Colour::white},
     m_driver{driver}
 {}
 
@@ -50,12 +49,12 @@ Board Game::board() const
 
 Colour Game::current_turn() const
 {
-    return m_turn;
+    return m_board.turn;
 }
 
 std::optional<Loc> const& Game::last_turn_pawn_double_jump_dest() const
 {
-    return m_last_turn_pawn_double_jump_dest;
+    return m_board.last_turn_pawn_double_jump_dest;
 }
 
 bool Game::move(Loc src, Loc dest)
@@ -76,16 +75,16 @@ bool Game::move(Loc src, Loc dest)
 
 void Game::force_move(Move move)
 {
-    m_turn = flip_colour(m_turn);
+    m_board.turn = flip_colour(m_board.turn);
     m_board = move.result;
 
     if (is_pawn_double_jump(move))
     {
-        m_last_turn_pawn_double_jump_dest = move.dest;
+        m_board.last_turn_pawn_double_jump_dest = move.dest;
     }
     else
     {
-        m_last_turn_pawn_double_jump_dest = std::nullopt;
+        m_board.last_turn_pawn_double_jump_dest = std::nullopt;
     }
 }
 

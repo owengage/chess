@@ -85,6 +85,7 @@ namespace chess {
             void add_direction(int dx, int dy, Loc src);
 
             void remove_checked(Colour);
+            void flip_turn_for_list();
 
             Game const& game;
             std::vector<Move> list;
@@ -106,7 +107,16 @@ namespace chess {
                 }
             }
 
+            flip_turn_for_list();
             remove_checked(current_colour);
+        }
+
+        void PotentialMoves::flip_turn_for_list()
+        {
+            for (auto & move : list)
+            {
+                move.result.turn = flip_colour(move.result.turn);
+            }
         }
 
         std::vector<Move> PotentialMoves::retrieve()

@@ -14,6 +14,14 @@ keep track of the game to resolve ambiguity. For example the "movetext" `Ka3` is
 a game it isn't obvious if there is really a knight that can move there--unless you track the game. So turning the PGN
 into high-level tokens will make writing a parser powered by my `Game` class a lot simpler, which is the second part.
 
+In order to push through a nice database of PGN it will be useful to be able to accept PGN with a different starting
+position. This requires parsing FEN/EDN notation. My lexer should also be able to decode games one after the other,
+and making a parser that is happy to split up games.
+
+* Create parser that returns all the moves for a game
+* Create validator that runs moves through a `Game` checking everything agrees.
+* Parse FEN and observe that tag in the game parser. 
+
 ## TODOs
 
 * Speed up move generation. Benchmark!

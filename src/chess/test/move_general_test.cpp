@@ -213,6 +213,8 @@ namespace chess
         });
         auto g = Game{driver, b};
 
+        // This fails because I changed storage to the board...
+
         EXPECT_CALL(driver, checkmate(_,_));
 
         EXPECT_TRUE(g.move("A1", "A2")); // get to black's move

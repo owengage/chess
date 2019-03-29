@@ -195,8 +195,8 @@ bool Lexer::san_from_text(std::string text)
     if (auto marker = get_termination_marker(text); marker)
     {
         m_parser.visit(*marker);
-        m_state = State::done;
-        return false;
+        m_state = State::expect_tag_open_or_movetext;
+        return true;
     }
 
     san.type = extract_type(text);

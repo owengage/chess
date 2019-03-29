@@ -690,6 +690,20 @@ namespace chess::pgn
         feed(lexer);
     }
 
+    TEST(lexer_test, second_game_should_also_get_lexed)
+    {
+        auto stream = std::istringstream{R"(1. a3 * 1. e4)"};
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
+        InSequence dummy;
+        EXPECT_CALL(parser, visit(move_number(1)));
+        EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::in_progress)));
+        EXPECT_CALL(parser, visit(move_number(1)));
+
+        feed(lexer);
+    }
+
     TEST(lexer_test, movetext_wiki_example)
     {
         auto stream = std::istringstream{R"(
@@ -717,9 +731,9 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::draw)));
 
         auto count = feed(lexer);
-        auto expected_count = 43 * 4 + 7 * 4 + 1;
+        auto expected_count = 43 * 4 + 7 * 4 + 1; // +1 for 'end of stream' iteration of loop
         // 43 moves 4 tokens each, 7 tags 4 tokens each. One comment.
-        EXPECT_EQ(expected_count - 1, count); // sub one as we don't go around the loop for last token
+        EXPECT_EQ(expected_count, count);
     }
 
     TEST(lexer_test, pgn_example_1)

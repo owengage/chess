@@ -75,8 +75,10 @@ bool Game::move(Loc src, Loc dest)
 
 void Game::force_move(Move move)
 {
-    m_board.turn = flip_colour(m_board.turn);
+    // FIXME: Make available_moves handle the resulting `Move` changing the turn/last-pawn-move.
+    auto turn = flip_colour(m_board.turn);
     m_board = move.result;
+    m_board.turn = turn;
 
     if (is_pawn_double_jump(move))
     {

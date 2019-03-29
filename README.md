@@ -20,7 +20,7 @@ and making a parser that is happy to split up games.
 
 * Create parser that returns all the moves for a game
 * Create validator that runs moves through a `Game` checking everything agrees.
-* Parse FEN and observe that tag in the game parser. 
+* Parse FEN and observe that tag in the game parser.
 
 ## TODOs
 

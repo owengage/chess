@@ -6,20 +6,7 @@ moves are available.
 
 ## Current work
 
-I'm writing a PGN parser. Once this is done I should be able to throw lots of real chess games at my library as a sort
-of extensive test suite. I'm splitting this into at least two parts. 
-
-One part is lexing the PGN, while PGN isn't too complicated, when it comes to verifying each move you actually need to
-keep track of the game to resolve ambiguity. For example the "movetext" `Ka3` is valid, but if you're halfway through
-a game it isn't obvious if there is really a knight that can move there--unless you track the game. So turning the PGN
-into high-level tokens will make writing a parser powered by my `Game` class a lot simpler, which is the second part.
-
-In order to push through a nice database of PGN it will be useful to be able to accept PGN with a different starting
-position. This requires parsing FEN/EDN notation. My lexer should also be able to decode games one after the other,
-and making a parser that is happy to split up games.
-
-* Create parser that returns all the moves for a game
-* Create validator that runs moves through a `Game` checking everything agrees.
+* Create validator that runs moves through a `Game` checking everything agrees. Core part will be `pgn::resolve_move()`.
 * Parse FEN and observe that tag in the game parser.
 
 ## TODOs

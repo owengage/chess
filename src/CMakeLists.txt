@@ -1,4 +1,5 @@
 add_subdirectory(chess)
+add_subdirectory(applications)
 
 add_executable(play)
 

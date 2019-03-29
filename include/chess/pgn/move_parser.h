@@ -6,9 +6,15 @@
 
 #include <iosfwd>
 #include <optional>
+#include <vector>
 
 namespace chess::pgn
 {
+    struct IncompleteGameError : std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
     /**
      * Parses a game in PGN for legality.
      */
@@ -16,7 +22,7 @@ namespace chess::pgn
     {
         explicit MoveParser(std::istream &);
 
-        std::optional<SanMove> next();
+        std::optional<std::vector<SanMove>> next_game();
 
         void visit(TagPairOpen const &open) override;
         void visit(TagPairClose const &close) override;
@@ -33,5 +39,7 @@ namespace chess::pgn
     private:
         Lexer m_lexer;
         std::optional<SanMove> m_move;
+        std::optional<TerminationMarker> m_term;
+        int m_alternative_depth;
     };
 }

@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 
 #include <sstream>
+#include <fstream>
 
 using testing::InSequence;
 using testing::A;
@@ -50,49 +51,60 @@ namespace chess::pgn
 
         struct PrintParser : Parser
         {
-            void visit(TagPairOpen const& token)
+            void visit(TagPairOpen const& token) override
             {
                 std::cout << "[";
             }
 
-            void visit(TagPairClose const& token)
+            void visit(TagPairClose const& token) override
             {
                 std::cout << "]\n";
             }
 
-            void visit(TagPairName const& token)
+            void visit(TagPairName const& token) override
             {
                 std::cout << token.name << ' ';
             }
 
-            void visit(TagPairValue const& token)
+            void visit(TagPairValue const& token) override
             {
                 std::cout << '"' << token.value << "\"";
             }
 
-            void visit(MoveNumber const& token)
+            void visit(MoveNumber const& token) override
             {
                 std::cout << "Move " << token.number << ' ';
             }
 
-            void visit(ColourIndicator const& token)
+            void visit(ColourIndicator const& token) override
             {
                 std::cout << (token.colour == Colour::white ? 'W' : 'B') << '\n';
             }
 
-            void visit(SanMove const& token)
+            void visit(SanMove const& token) override
             {
                 std::cout << *token.dest_x << ", " << *token.dest_y << '\n';
             }
 
-            void visit(SyntaxError const& token)
+            void visit(SyntaxError const& token) override
             {
                 std::cout << "SyntaxError";
             }
 
-            void visit(TerminationMarker const& token)
+            void visit(TerminationMarker const& token) override
             {
                 std::cout << "End " << static_cast<int>(token.type) << '\n';
+            }
+
+            void visit(AlternativeOpen const &open) override
+            {
+                std::cout << "AltOpen";
+
+            }
+
+            void visit(AlternativeClose const &alternativeClose) override
+            {
+                std::cout << "AltClose";
             }
         };
     }
@@ -700,6 +712,24 @@ namespace chess::pgn
         EXPECT_CALL(parser, visit(move_number(1)));
         EXPECT_CALL(parser, visit(termination(TerminationMarker::Type::in_progress)));
         EXPECT_CALL(parser, visit(move_number(1)));
+
+        feed(lexer);
+    }
+
+    TEST(lexer_test, movetext_with_castling_that_causes_check)
+    {
+        auto stream = std::istringstream{R"(
+            Be2 O-O-O+
+        )"};
+
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
+        InSequence dummy;
+        EXPECT_CALL(parser, visit(A<SanMove const&>()));
+        EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
+                Field(&SanMove::queen_side_castle, true)
+        ))));
 
         feed(lexer);
     }

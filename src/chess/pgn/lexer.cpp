@@ -185,6 +185,9 @@ bool Lexer::next()
 bool Lexer::san_from_text(std::string text)
 {
     auto san = SanMove{};
+    san.check = extract_check(text);
+    san.checkmate = extract_checkmate(text);
+    san.promotion = extract_promotion(text);
 
     if (handle_castling(san, text))
     {
@@ -200,9 +203,6 @@ bool Lexer::san_from_text(std::string text)
     }
 
     san.type = extract_type(text);
-    san.check = extract_check(text);
-    san.checkmate = extract_checkmate(text);
-    san.promotion = extract_promotion(text);
 
     // Destination is always present
     if (is_rank(text.back()))

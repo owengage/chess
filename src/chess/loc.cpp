@@ -29,15 +29,6 @@ Loc::Loc(int x, int y) : m_x{x}, m_y{y}
     }
 }
 
-Loc::Loc(char const * letternum)
-: m_x{letternum[0] - 'A'}, m_y{letternum[1] - '1'}
-{
-    if (m_x >= side_size || m_y >= side_size)
-    {
-        throw LocInvalid{m_x,m_y};
-    }
-}
-
 int Loc::index() const
 {
     return m_y*side_size+m_x;

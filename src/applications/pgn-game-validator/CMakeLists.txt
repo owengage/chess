@@ -7,4 +7,5 @@ target_sources(pgn-game-validator
 target_link_libraries(pgn-game-validator
         PRIVATE
         chess
-        chess-pgn)
+        chess-pgn
+        chess-text)

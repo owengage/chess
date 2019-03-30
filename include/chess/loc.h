@@ -16,7 +16,16 @@ namespace chess
         static constexpr int board_size = side_size * side_size;
 
         Loc(int x, int y);
-        Loc(char const *);
+
+        constexpr Loc(char const * letternum) :
+                m_x{letternum[0] - 'A'},
+                m_y{letternum[1] - '1'}
+        {
+            if (m_x >= side_size || m_y >= side_size)
+            {
+                throw LocInvalid{m_x,m_y};
+            }
+        }
 
         int x() const;
         int y() const;

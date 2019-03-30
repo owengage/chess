@@ -83,6 +83,8 @@ namespace chess {
              */
             void add_direction(int dx, int dy, Loc src);
 
+            void add_promotions(Loc src, Loc dest);
+
             void remove_checked(Colour);
             void flip_turn_for_list();
 
@@ -240,13 +242,12 @@ namespace chess {
         void PotentialMoves::generate_for_pawn(Square p, Loc src) {
             int direction = p.colour() == Colour::white ? 1 : -1;
 
-            add_delta_capture(1, direction, src);
-            add_delta_capture(-1, direction, src);
-
             // Only add square ahead if not at the end of the board. Promotion move dealt with specially.
             if (auto dest = Loc::add_delta(src, 0, direction); dest && (dest->y() != Loc::side_size - 1 && dest->y() != 0))
             {
                 add_delta_empty(0, direction, src);
+                add_delta_capture(1, direction, src);
+                add_delta_capture(-1, direction, src);
             }
 
             // Can move two if hasn't moved before and first space free.
@@ -259,29 +260,49 @@ namespace chess {
             generate_promotions(p, src);
         }
 
+        void PotentialMoves::add_promotions(Loc src, Loc dest)
+        {
+            auto new_board = board;
+            new_board[dest] = new_board[src];
+            new_board[src] = Empty();
+
+            new_board[dest].set_type(SquareType::rook);
+            list.push_back({src, dest, new_board, false, true});
+
+            new_board[dest].set_type(SquareType::bishop);
+            list.push_back({src, dest, new_board, false, true});
+
+            new_board[dest].set_type(SquareType::knight);
+            list.push_back({src, dest, new_board, false, true});
+
+            new_board[dest].set_type(SquareType::queen);
+            list.push_back({src, dest, new_board, false, true});
+        }
+
         void PotentialMoves::generate_promotions(Square p, Loc src)
         {
             int direction = p.colour() == Colour::white ? 1 : -1;
-            auto dest = Loc::add_delta(src, 0, direction);
+            auto non_capture_dest = Loc::add_delta(src, 0, direction);
+            auto left_capture_dest = Loc::add_delta(src, -1, direction);
+            auto right_capture_dest = Loc::add_delta(src, 1, direction);
 
             // Must be a promotion if we're going to land on either end of the board.
-            if (dest && (dest->y() == Loc::side_size - 1 || dest->y() == 0))
+            if (non_capture_dest && (non_capture_dest->y() == Loc::side_size - 1 || non_capture_dest->y() == 0))
             {
                 // TODO: Test cant promote if piece in way
-                if (is_empty(*dest))
+                if (is_empty(*non_capture_dest))
                 {
-                    auto new_board = board;
-                    new_board[*dest] = new_board[src];
-                    new_board[src] = Empty();
+                    add_promotions(src, *non_capture_dest);
+                }
 
-                    new_board[*dest].set_type(SquareType::rook);
-                    list.push_back({src, *dest, new_board, true, true});
-                    new_board[*dest].set_type(SquareType::bishop);
-                    list.push_back({src, *dest, new_board, true, true});
-                    new_board[*dest].set_type(SquareType::knight);
-                    list.push_back({src, *dest, new_board, true, true});
-                    new_board[*dest].set_type(SquareType::queen);
-                    list.push_back({src, *dest, new_board, true, true});
+                if (left_capture_dest && is_capturable(*left_capture_dest, src))
+                {
+                    add_promotions(src, *left_capture_dest);
+                }
+
+                if (right_capture_dest && is_capturable(*right_capture_dest, src))
+                {
+                    add_promotions(src, *right_capture_dest);
                 }
             }
         }
@@ -387,8 +408,8 @@ namespace chess {
                 if (board[left] == rook && !has_moved(left))
                 {
                     auto king_src = src;
-                    auto king_dest = *Loc::add_delta(left, 1, 0);
-                    auto rook_dest = *Loc::add_delta(left, 2, 0);
+                    auto king_dest = *Loc::add_delta(left, 2, 0);
+                    auto rook_dest = *Loc::add_delta(left, 3, 0);
 
                     if (empty_from_to(king_src, king_dest))
                     {

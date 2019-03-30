@@ -283,4 +283,30 @@ namespace chess
         g.move("A2", "A1");
         EXPECT_EQ(Queen(Colour::black), g.board()["A1"]);
     }
+
+    TEST_F(MovePawnFixture, capture_and_promotion)
+    {
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Queen(Colour::white)));
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A7", wpawn},
+                {"B8", Rook(Colour::black)}
+        })};
+
+        EXPECT_TRUE(g.move("A7", "B8"));
+        EXPECT_EQ(Queen(Colour::white), g.board()["B8"]);
+    }
+
+    TEST_F(MovePawnFixture, promotion_next_to_same_piece)
+    {
+        EXPECT_CALL(driver, promote(_, _)).WillOnce(Return(Queen(Colour::white)));
+
+        auto g = Game{driver, Board::with_pieces({
+                {"A7", wpawn},
+                {"B8", Queen(Colour::white)}
+        })};
+
+        EXPECT_TRUE(g.move("A7", "A8"));
+        EXPECT_EQ(Queen(Colour::white), g.board()["B8"]);
+    }
 }

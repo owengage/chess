@@ -734,6 +734,26 @@ namespace chess::pgn
         feed(lexer);
     }
 
+    TEST(lexer_test, movetext_with_axb6_bug)
+    {
+        auto stream = std::istringstream{R"(
+            axb6
+        )"};
+
+        auto parser = MockParser{};
+        auto lexer = Lexer{stream, parser};
+
+        EXPECT_CALL(parser, visit(Matcher<SanMove const&>(AllOf(
+                Field(&SanMove::dest_x, 1),
+                Field(&SanMove::dest_y, 5),
+                Field(&SanMove::src_x, 0),
+                Field(&SanMove::src_y, std::nullopt),
+                Field(&SanMove::capture, true)
+        ))));
+
+        feed(lexer);
+    }
+
     TEST(lexer_test, movetext_wiki_example)
     {
         auto stream = std::istringstream{R"(

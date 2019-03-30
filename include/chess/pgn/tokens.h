@@ -42,7 +42,6 @@ namespace chess::pgn
     struct SanMove
     {
         SanMove() = default;
-
         std::optional<int> dest_x;
         std::optional<int> dest_y;
         std::optional<int> src_x;
@@ -54,6 +53,7 @@ namespace chess::pgn
         bool checkmate = false;
         bool king_side_castle = false;
         bool queen_side_castle = false;
+        std::string original_text = "";
     };
 
     struct SyntaxError

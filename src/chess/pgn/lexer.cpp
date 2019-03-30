@@ -185,6 +185,7 @@ bool Lexer::next()
 bool Lexer::san_from_text(std::string text)
 {
     auto san = SanMove{};
+    san.original_text = text;
     san.check = extract_check(text);
     san.checkmate = extract_checkmate(text);
     san.promotion = extract_promotion(text);

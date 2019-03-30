@@ -9,6 +9,13 @@ moves are available.
 * Create validator that runs moves through a `Game` checking everything agrees. Core part will be `pgn::resolve_move()`.
 * Parse FEN and observe that tag in the game parser.
 
+## Bugs found through PGN
+
+* Most of my Queen side castle tests were on the wrong squares.
+* Promotion of pawns when that move was a capture did not promote.
+* When promoting a pawn to a piece, if a piece of the same type can also move to the promoted position it caused an
+  ambiguity in my SAN move resolver.
+
 ## TODOs
 
 * Speed up move generation. Benchmark!

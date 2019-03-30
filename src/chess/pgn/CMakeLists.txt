@@ -9,7 +9,8 @@ target_include_directories(chess-pgn
 target_sources(chess-pgn
         PRIVATE
         lexer.cpp
-        move_parser.cpp)
+        move_parser.cpp
+        resolve_move.cpp)
 
 target_link_libraries(chess-pgn
         chess)

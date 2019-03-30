@@ -8,6 +8,8 @@
 
 namespace chess
 {
+    struct Move;
+
     struct Board
     {
         static Board standard();
@@ -16,6 +18,8 @@ namespace chess
 
         Square & operator[](Loc loc);
         Square const& operator[](Loc loc) const;
+
+        void force_move(Move const& move);
 
         Colour turn = Colour::white;
         std::optional<Loc> last_turn_pawn_double_jump_dest = std::nullopt;

@@ -25,7 +25,7 @@ namespace chess
     TEST_F(AvailableMovesFixture, standard_start_should_have_20_moves)
     {
         auto game = Game{driver};
-        auto moves = available_moves(game);
+        auto moves = available_moves(game.board());
         EXPECT_EQ(20, moves.size()); // 8 pawns with two moves each. 2 knights two moves each == 20
     }
 
@@ -35,7 +35,7 @@ namespace chess
                 {"A7", Pawn(Colour::white)}
         })};
 
-        auto moves = available_moves(game);
+        auto moves = available_moves(game.board());
         EXPECT_EQ(4, moves.size());
         EXPECT_THAT(moves, contains_loc_with_sq("A8", Rook(Colour::white)));
         EXPECT_THAT(moves, contains_loc_with_sq("A8", Bishop(Colour::white)));

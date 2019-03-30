@@ -3,7 +3,8 @@ add_executable(pgn_test)
 target_sources(pgn_test
         PRIVATE
         lexer_test.cpp
-        move_parser_test.cpp)
+        move_parser_test.cpp
+        resolve_move_test.cpp)
 
 target_include_directories(pgn_test
         PRIVATE

@@ -1,11 +1,15 @@
 #include <chess/pgn/resolve_move.h>
 
-#include <chess/game.h>
+#include <chess/board.h>
 #include <chess/move.h>
 #include <chess/available_moves.h>
 
-std::optional<Move> chess::pgn::resolve_move(const chess::pgn::SanMove &, const chess::Game &)
+using chess::Board;
+using chess::Move;
+using chess::pgn::SanMove;
+
+std::optional<Move> chess::pgn::resolve_move(SanMove const& san, Board const& board)
 {
-    // TODO
+    auto moves = available_moves(board);
     return std::nullopt;
 }

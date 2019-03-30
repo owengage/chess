@@ -1,9 +1,8 @@
 #include <chess/available_moves.h>
+#include <chess/board.h>
 
 #include <algorithm>
 #include <vector>
-
-#include <chess/game.h>
 
 namespace chess {
 
@@ -24,7 +23,7 @@ namespace chess {
         }
 
         struct PotentialMoves {
-            explicit PotentialMoves(Game const& game);
+            explicit PotentialMoves(Board const& board);
 
             std::vector<Move> retrieve();
 
@@ -87,16 +86,15 @@ namespace chess {
             void remove_checked(Colour);
             void flip_turn_for_list();
 
-            Game const& game;
+            Board const& board;
             std::vector<Move> list;
         };
 
 
-        PotentialMoves::PotentialMoves(Game const &game)
-                : game{game}, list{}
+        PotentialMoves::PotentialMoves(Board const& board)
+                : board{board}, list{}
         {
-            auto current_colour = game.current_turn();
-            auto board = game.board();
+            auto current_colour = board.turn;
 
             for (Loc loc : Loc::all_squares())
             {
@@ -154,22 +152,21 @@ namespace chess {
         }
 
         bool PotentialMoves::is_empty(Loc loc) {
-            return game.board()[loc] == Empty();
+            return board[loc] == Empty();
         }
 
         bool PotentialMoves::is_capturable(Loc loc, Loc src) {
-            auto const board = game.board();
             auto src_colour = board[src].colour();
             return !is_empty(loc) && src_colour != board[loc].colour();
         }
 
         bool PotentialMoves::has_moved(Loc loc) {
-            auto p = game.board()[loc];
+            auto p = board[loc];
             return p.type() != SquareType::empty && p.has_moved();
         }
 
         void PotentialMoves::add(Loc dest, Loc src) {
-            Board b = game.board();
+            Board b = board;
             b[dest] = b[src];
             b[src] = Empty();
             b[dest].set_moved();
@@ -177,7 +174,7 @@ namespace chess {
         }
 
         void PotentialMoves::add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src) {
-            Board b = game.board();
+            Board b = board;
             b[king_dest] = b[king_src];
             b[king_src] = Empty();
             b[rook_dest] = b[rook_src];
@@ -231,7 +228,7 @@ namespace chess {
         }
 
         void PotentialMoves::remove_checked(Colour current_colour) {
-            auto king_loc = find_loc_of(game.board(), King(current_colour));
+            auto king_loc = find_loc_of(board, King(current_colour));
 
             auto new_end = std::remove_if(begin(list), end(list), [this, &king_loc](Move m) {
                 return m.dest == king_loc;
@@ -273,18 +270,18 @@ namespace chess {
                 // TODO: Test cant promote if piece in way
                 if (is_empty(*dest))
                 {
-                    auto board = game.board();
-                    board[*dest] = board[src];
-                    board[src] = Empty();
+                    auto new_board = board;
+                    new_board[*dest] = new_board[src];
+                    new_board[src] = Empty();
 
-                    board[*dest].set_type(SquareType::rook);
-                    list.push_back({src, *dest, board, true, true});
-                    board[*dest].set_type(SquareType::bishop);
-                    list.push_back({src, *dest, board, true, true});
-                    board[*dest].set_type(SquareType::knight);
-                    list.push_back({src, *dest, board, true, true});
-                    board[*dest].set_type(SquareType::queen);
-                    list.push_back({src, *dest, board, true, true});
+                    new_board[*dest].set_type(SquareType::rook);
+                    list.push_back({src, *dest, new_board, true, true});
+                    new_board[*dest].set_type(SquareType::bishop);
+                    list.push_back({src, *dest, new_board, true, true});
+                    new_board[*dest].set_type(SquareType::knight);
+                    list.push_back({src, *dest, new_board, true, true});
+                    new_board[*dest].set_type(SquareType::queen);
+                    list.push_back({src, *dest, new_board, true, true});
                 }
             }
         }
@@ -295,9 +292,9 @@ namespace chess {
             // take it, we can move there and take the pawn that jumped 2 squares.
 
             int direction = p.colour() == Colour::white ? 1 : -1;
-            auto const& current_board = game.board();
+            auto const& current_board = board;
 
-            if (auto const& last_move_dest = game.last_turn_pawn_double_jump_dest(); last_move_dest)
+            if (auto const& last_move_dest = board.last_turn_pawn_double_jump_dest; last_move_dest)
             {
                 bool last_move_was_to_side_of_current =
                         src.y() == last_move_dest->y() && std::abs(src.x() - last_move_dest->x()) == 1;
@@ -305,7 +302,7 @@ namespace chess {
                 if (last_move_was_to_side_of_current) {
                     auto dest = Loc::add_delta(*last_move_dest, 0, direction);
                     if (dest && is_empty(*dest)) {
-                        Board b = game.board();
+                        Board b = board;
                         b[*dest] = b[src];
                         b[src] = Empty();
                         b[*last_move_dest] = Empty(); // capture en passant
@@ -382,7 +379,6 @@ namespace chess {
 
             if (!has_moved(src))
             {
-                auto board = game.board();
                 auto colour = k.colour();
                 auto left = Loc{0, src.y()};
                 auto right = Loc{Loc::side_size - 1, src.y()};
@@ -414,9 +410,9 @@ namespace chess {
             }
         }
 
-        std::vector<Move> potential_moves(Game const& game)
+        std::vector<Move> potential_moves(Board const& board)
         {
-            auto pm = PotentialMoves{game};
+            auto pm = PotentialMoves{board};
             return pm.retrieve();
         }
 
@@ -425,14 +421,14 @@ namespace chess {
             return (move.result[move.dest].type() == SquareType::king) && std::abs(move.src.x() - move.dest.x()) > 1;
         }
 
-        bool causes_mover_to_be_in_check(Game game, Move const& current_move)
+        bool causes_mover_to_be_in_check(Board board, Move const& current_move)
         {
             // Must do before assuming the move.
-            auto current_colour = game.current_turn();
-            game.force_move(current_move);
+            auto current_colour = board.turn;
+            board.force_move(current_move);
 
-            auto king_loc = find_loc_of(game.board(), King(current_colour));
-            auto potentials = potential_moves(game);
+            auto king_loc = find_loc_of(board, King(current_colour));
+            auto potentials = potential_moves(board);
 
             bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
             {
@@ -462,15 +458,15 @@ namespace chess {
             return in_check;
         }
 
-        bool caused_check(Game game, Move & current_move)
+        bool caused_check(Board board, Move & current_move)
         {
             // Must do before assuming the move.
-            auto opposite_colour = (game.current_turn() == Colour::white) ? Colour::black : Colour::white;
-            game.force_move(current_move); // make the move
-            game.force_move({"A1", "A1", game.board()}); // skip next move.
+            auto opposite_colour = (board.turn == Colour::white) ? Colour::black : Colour::white;
+            board.force_move(current_move); // make the move
+            board.force_move({"A1", "A1", board}); // skip next move.
 
-            auto king_loc = find_loc_of(game.board(), King(opposite_colour));
-            auto potentials = potential_moves(game);
+            auto king_loc = find_loc_of(board, King(opposite_colour));
+            auto potentials = potential_moves(board);
 
             bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
             {
@@ -481,20 +477,20 @@ namespace chess {
         }
     }
 
-    std::vector<Move> available_moves(Game const &game)
+    std::vector<Move> available_moves(Board const& board)
     {
-        auto potentials = potential_moves(game);
-        auto game_copy = game;
+        auto potentials = potential_moves(board);
+        auto board_copy = board;
 
-        auto it = std::remove_if(begin(potentials), end(potentials), [&game_copy](Move const& move) {
-            return causes_mover_to_be_in_check(game_copy, move);
+        auto it = std::remove_if(begin(potentials), end(potentials), [&board_copy](Move const& move) {
+            return causes_mover_to_be_in_check(board_copy, move);
         });
         potentials.erase(it, end(potentials));
 
         // For each potential move, skip next player, see if current player could take king on next go
         // ie the move causes check.
-        std::for_each(begin(potentials), end(potentials), [&game_copy](Move & move) {
-            move.caused_check = caused_check(game_copy, move);
+        std::for_each(begin(potentials), end(potentials), [&board_copy](Move & move) {
+            move.caused_check = caused_check(board_copy, move);
         });
 
         return potentials;

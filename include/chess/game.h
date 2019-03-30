@@ -19,7 +19,6 @@ namespace chess
         Board board() const;
 
         bool move(Loc src, Loc dest);
-        void force_move(Move);
 
         Colour current_turn() const;
         std::optional<Loc> const& last_turn_pawn_double_jump_dest() const;

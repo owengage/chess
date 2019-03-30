@@ -5,7 +5,10 @@
 
 namespace chess
 {
-    struct Game;
+    struct Board;
 
-    std::vector<Move> available_moves(Game const &game);
+    /**
+     * Given a board, return all legal moves.
+     */
+    std::vector<Move> available_moves(Board const& game);
 }

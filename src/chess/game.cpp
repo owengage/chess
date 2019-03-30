@@ -18,19 +18,11 @@ namespace
 {
     std::vector<Move> get_moves_for(Game const &game, Loc src)
     {
-        auto moves = chess::available_moves(game);
+        auto moves = chess::available_moves(game.board());
         auto it = std::remove_if(begin(moves), end(moves), [&src](auto move) { return move.src != src; });
         moves.erase(it, end(moves));
 
         return moves;
-    }
-
-    bool is_pawn_double_jump(Move const& move)
-    {
-        auto const& sq = move.result[move.dest];
-        auto const dy = move.src.y() - move.dest.y();
-
-        return (sq.type() == SquareType::pawn) && std::abs(dy) == 2;
     }
 }
 
@@ -65,29 +57,12 @@ bool Game::move(Loc src, Loc dest)
     if (move_it != std::end(moves))
     {
         handle_promotion(*move_it);
-        force_move(*move_it);
+        m_board.force_move(*move_it);
         handle_checkmate(*move_it);
         return true;
     }
 
     return false;
-}
-
-void Game::force_move(Move move)
-{
-    // FIXME: Make available_moves handle the resulting `Move` changing the turn/last-pawn-move.
-    auto turn = flip_colour(m_board.turn);
-    m_board = move.result;
-    m_board.turn = turn;
-
-    if (is_pawn_double_jump(move))
-    {
-        m_board.last_turn_pawn_double_jump_dest = move.dest;
-    }
-    else
-    {
-        m_board.last_turn_pawn_double_jump_dest = std::nullopt;
-    }
 }
 
 void Game::handle_promotion(chess::Move & move)
@@ -113,7 +88,7 @@ void Game::handle_promotion(chess::Move & move)
 
 void Game::handle_checkmate(Move const& move)
 {
-    auto moves = available_moves(*this);
+    auto moves = available_moves(m_board);
     if (moves.empty())
     {
         if (move.caused_check)

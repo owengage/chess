@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chess/square.h>
+#include <chess/Square.h>
 
 #include <string>
 #include <optional>

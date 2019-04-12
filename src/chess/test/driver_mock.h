@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chess/driver.h>
+#include <chess/Driver.h>
 
 namespace chess
 {

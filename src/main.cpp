@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include <chess/game.h>
-#include <chess/basic_driver.h>
+#include <chess/Game.h>
+#include <chess/BasicDriver.h>
 
 #include <chess/text/print.h>
 

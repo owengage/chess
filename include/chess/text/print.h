@@ -2,7 +2,7 @@
 
 #include <iosfwd>
 
-#include <chess/board.h>
+#include <chess/Board.h>
 
 namespace chess::text
 {

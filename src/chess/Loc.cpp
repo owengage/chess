@@ -1,4 +1,4 @@
-#include <chess/loc.h>
+#include <chess/Loc.h>
 
 using chess::LocInvalid;
 using chess::Loc;

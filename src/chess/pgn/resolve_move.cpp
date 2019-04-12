@@ -1,7 +1,7 @@
 #include <chess/pgn/resolve_move.h>
 
-#include <chess/board.h>
-#include <chess/move.h>
+#include <chess/Board.h>
+#include <chess/Move.h>
 #include <chess/available_moves.h>
 #include <chess/pgn/tokens.h>
 

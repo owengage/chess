@@ -10,8 +10,8 @@ target_include_directories(chess
 
 target_sources(chess
         PRIVATE
-        loc.cpp
-        board.cpp
-        game.cpp
+        Loc.cpp
+        Board.cpp
+        Game.cpp
         available_moves.cpp
-        basic_driver.cpp)
+        BasicDriver.cpp)

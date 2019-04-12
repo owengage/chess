@@ -1,7 +1,7 @@
 #pragma once
 
-#include <chess/loc.h>
-#include <chess/board.h>
+#include <chess/Loc.h>
+#include <chess/Board.h>
 
 namespace chess
 {

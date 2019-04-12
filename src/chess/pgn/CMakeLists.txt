@@ -8,8 +8,8 @@ target_include_directories(chess-pgn
 
 target_sources(chess-pgn
         PRIVATE
-        lexer.cpp
-        move_parser.cpp
+        Lexer.cpp
+        MoveParser.cpp
         resolve_move.cpp
         validate.cpp)
 

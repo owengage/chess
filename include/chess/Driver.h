@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-#include <chess/square.h>
+#include <chess/Square.h>
 
 namespace chess
 {

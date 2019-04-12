@@ -1,4 +1,4 @@
-#include <chess/pgn/move_parser.h>
+#include <chess/pgn/MoveParser.h>
 
 #include <iostream>
 #include <string>

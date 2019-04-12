@@ -3,8 +3,8 @@
 #include <vector>
 #include <utility>
 
-#include <chess/square.h>
-#include <chess/loc.h>
+#include <chess/Square.h>
+#include <chess/Loc.h>
 
 namespace chess
 {

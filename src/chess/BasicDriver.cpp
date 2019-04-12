@@ -1,6 +1,6 @@
-#include <chess/basic_driver.h>
-#include <chess/move.h>
-#include <chess/game.h>
+#include <chess/BasicDriver.h>
+#include <chess/Move.h>
+#include <chess/Game.h>
 
 using chess::BasicDriver;
 using chess::Square;

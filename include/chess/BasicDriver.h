@@ -1,7 +1,7 @@
 #pragma once
 
-#include <chess/square.h>
-#include <chess/driver.h>
+#include <chess/Square.h>
+#include <chess/Driver.h>
 
 namespace chess
 {

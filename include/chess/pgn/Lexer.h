@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chess/pgn/tokens.h>
-#include <chess/pgn/parser.h>
+#include <chess/pgn/Parser.h>
 
 #include <iosfwd>
 

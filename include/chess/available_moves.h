@@ -1,7 +1,7 @@
 #pragma once
 
-#include <chess/loc.h>
-#include <chess/move.h>
+#include <chess/Loc.h>
+#include <chess/Move.h>
 
 namespace chess
 {

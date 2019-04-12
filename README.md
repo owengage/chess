@@ -2,29 +2,33 @@
 
 A chess game/engine written in C++. So far all chess moves have been encoded in the game, allowing a user to generate
 all possible moves allowable. This includes checking for en passant, castling, check, checkmate, and stalemate when no
-moves are available.
+moves are available. There is also a PGN parser and validator.
 
 ## Current work
 
-* Create validator that runs moves through a `Game` checking everything agrees. Core part will be `pgn::resolve_move()`.
-* Parse FEN and observe that tag in the game parser.
+I need to start work on either the chess engine to actually suggest moves, or on benchmarking to speed up the code that
+I've got.
 
-## Bugs found through PGN
+## TODOs
+
+* [x] Write chess game and ability to generate all legal moves
+* [x] Write Algebraic Notation or Portable Game Notation parser
+* [ ] Speed up move generation via benchmarking
+* [ ] Automated chess player
+* [ ] Better chess viewer
+* [ ] Implement stalemate through 'inactivity'
+
+## Implementation notes
+
+### Bugs found through PGN
+
+While running thousands of games through my `Game` class, I came across several bugs:-
 
 * Most of my Queen side castle tests were on the wrong squares.
 * Promotion of pawns when that move was a capture did not promote.
 * When promoting a pawn to a piece, if a piece of the same type can also move to the promoted position it caused an
   ambiguity in my SAN move resolver.
 
-## TODOs
-
-* Speed up move generation. Benchmark!
-* Stalemate through 'inactivity'
-* Better chess viewer
-* Automated chess player
-* Write Algebraic Notation or Portable Game Notation parser
-
-## Implementation notes
 
 ### `std::variant` v. custom type
 

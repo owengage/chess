@@ -1,6 +1,6 @@
 #include <chess/pgn/validate.h>
-#include <chess/pgn/lexer.h>
-#include <chess/pgn/move_parser.h>
+#include <chess/pgn/Lexer.h>
+#include <chess/pgn/MoveParser.h>
 
 #include <gtest/gtest.h>
 

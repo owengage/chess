@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include <chess/board.h>
-#include <chess/move.h>
+#include <chess/Board.h>
+#include <chess/Move.h>
 
 namespace chess
 {

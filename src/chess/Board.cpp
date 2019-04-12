@@ -1,5 +1,5 @@
-#include <chess/board.h>
-#include <chess/move.h>
+#include <chess/Board.h>
+#include <chess/Move.h>
 
 using chess::Loc;
 using chess::Move;

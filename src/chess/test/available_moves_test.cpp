@@ -1,4 +1,4 @@
-#include <chess/game.h>
+#include <chess/Game.h>
 #include <chess/available_moves.h>
 
 #include "game_fixture.h"

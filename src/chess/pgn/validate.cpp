@@ -2,9 +2,9 @@
 #include <chess/pgn/tokens.h>
 #include <chess/pgn/resolve_move.h>
 
-#include <chess/square.h>
-#include <chess/game.h>
-#include <chess/driver.h>
+#include <chess/Square.h>
+#include <chess/Game.h>
+#include <chess/Driver.h>
 
 #include <vector>
 

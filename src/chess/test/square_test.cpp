@@ -1,4 +1,4 @@
-#include <chess/square.h>
+#include <chess/Square.h>
 
 #include <gtest/gtest.h>
 

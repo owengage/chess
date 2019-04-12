@@ -1,6 +1,6 @@
-#include <chess/game.h>
-#include <chess/driver.h>
-#include <chess/pgn/move_parser.h>
+#include <chess/Game.h>
+#include <chess/Driver.h>
+#include <chess/pgn/MoveParser.h>
 #include <chess/pgn/resolve_move.h>
 #include <chess/pgn/validate.h>
 

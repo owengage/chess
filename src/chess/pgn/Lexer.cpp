@@ -1,4 +1,4 @@
-#include <chess/pgn/lexer.h>
+#include <chess/pgn/Lexer.h>
 #include <chess/pgn/tokens.h>
 
 #include <istream>

@@ -1,5 +1,5 @@
 #include <chess/available_moves.h>
-#include <chess/board.h>
+#include <chess/Board.h>
 
 #include <algorithm>
 #include <vector>

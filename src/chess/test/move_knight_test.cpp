@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <chess/game.h>
+#include <chess/Game.h>
 
 #include "game_fixture.h"
 

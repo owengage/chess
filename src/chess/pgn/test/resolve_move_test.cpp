@@ -1,6 +1,6 @@
-#include <chess/board.h>
-#include <chess/game.h>
-#include <chess/basic_driver.h>
+#include <chess/Board.h>
+#include <chess/Game.h>
+#include <chess/BasicDriver.h>
 
 #include <chess/pgn/resolve_move.h>
 #include <chess/pgn/tokens.h>

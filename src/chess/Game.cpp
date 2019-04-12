@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <cstdint>
 
-#include <chess/game.h>
+#include <chess/Game.h>
 #include <chess/available_moves.h>
-#include <chess/driver.h>
+#include <chess/Driver.h>
 
 using chess::Loc;
 using chess::Game;

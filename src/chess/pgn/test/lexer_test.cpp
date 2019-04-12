@@ -1,5 +1,5 @@
-#include <chess/pgn/lexer.h>
-#include <chess/pgn/parser.h>
+#include <chess/pgn/Lexer.h>
+#include <chess/pgn/Parser.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <chess/pgn/parser.h>
+#include <chess/pgn/Parser.h>
 #include <chess/pgn/tokens.h>
-#include <chess/pgn/lexer.h>
+#include <chess/pgn/Lexer.h>
 
 #include <iosfwd>
 #include <optional>

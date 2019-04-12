@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <chess/game.h>
+#include <chess/Game.h>
 #include <chess/text/print.h>
 
 #include "game_fixture.h"

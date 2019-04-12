@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chess/move.h>
+#include <chess/Move.h>
 
 #include <optional>
 

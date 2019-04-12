@@ -17,6 +17,7 @@ I've got.
 * [ ] Automated chess player
 * [ ] Better chess viewer
 * [ ] Implement stalemate through 'inactivity'
+* [ ] Use more target based CMake
 
 ## Implementation notes
 

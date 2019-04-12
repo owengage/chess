@@ -4,11 +4,6 @@
 
 add_executable(move_test)
 
-target_include_directories(move_test
-        PRIVATE
-        "${gtest_SOURCE_DIR}/include"
-        "${gmock_SOURCE_DIR}/include")
-
 target_sources(move_test
         PRIVATE
         square_test.cpp
@@ -24,7 +19,6 @@ target_sources(move_test
 target_link_libraries(move_test
         PRIVATE
         chess
-        gmock
-        gtest_main)
+        chess-test)
 
 add_test(NAME move_test COMMAND move_test)

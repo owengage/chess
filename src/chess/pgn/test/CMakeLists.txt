@@ -7,14 +7,8 @@ target_sources(pgn_test
         resolve_move_test.cpp
         validate_test.cpp)
 
-target_include_directories(pgn_test
-        PRIVATE
-        "${gtest_SOURCE_DIR}/include"
-        "${gmock_SOURCE_DIR}/include")
-
 target_link_libraries(pgn_test
         chess-pgn
-        gmock
-        gtest_main)
+        chess-test)
 
 add_test(NAME pgn::pgn_test COMMAND pgn_test)

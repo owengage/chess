@@ -58,9 +58,7 @@ ValidationResult chess::pgn::validate(std::vector<SanMove> const &moves)
 
         auto real_move = chess::pgn::resolve_move(san, game.board());
 
-        if (real_move && game.move(real_move->src, real_move->dest))
-        {
-        } else
+        if (!real_move || !game.move(real_move->src, real_move->dest))
         {
             return {san};
         }

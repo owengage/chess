@@ -39,12 +39,10 @@ namespace chess
         int m_x;
         int m_y;
 
-        friend Loc operator+(Loc, Loc);
         friend bool operator==(Loc, Loc);
         friend bool operator!=(Loc, Loc);
     };
 
-    Loc operator+(Loc lhs, Loc rhs);
     bool operator==(Loc lhs, Loc rhs);
     bool operator!=(Loc lhs, Loc rhs);
 }

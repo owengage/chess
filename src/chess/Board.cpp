@@ -29,14 +29,6 @@ namespace
         b[{6, row}] = chess::Knight(colour);
         b[{7, row}] = chess::Rook(colour);
     }
-
-    bool is_pawn_double_jump(Move const& move)
-    {
-        auto const& sq = move.result[move.dest];
-        auto const dy = move.src.y() - move.dest.y();
-
-        return (sq.type() == SquareType::pawn) && std::abs(dy) == 2;
-    }
 }
 
 Board Board::standard()
@@ -74,21 +66,4 @@ Square & Board::operator[](Loc loc)
 Square const& Board::operator[](Loc loc) const
 {
     return squares[loc.index()];
-}
-
-void Board::force_move(Move const& move)
-{
-    // FIXME: Make available_moves handle the resulting `Move` changing the turn/last-pawn-move.
-    auto cached_turn = flip_colour(turn);
-    *this = move.result;
-    turn = cached_turn;
-
-    if (is_pawn_double_jump(move))
-    {
-        last_turn_pawn_double_jump_dest = move.dest;
-    }
-    else
-    {
-        last_turn_pawn_double_jump_dest = std::nullopt;
-    }
 }

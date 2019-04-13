@@ -10,5 +10,5 @@ namespace chess
     /**
      * Given a board, return all legal moves.
      */
-    std::vector<Move> available_moves(Board const& game);
+    std::vector<Move> available_moves(Board const&);
 }

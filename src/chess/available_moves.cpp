@@ -8,6 +8,14 @@ namespace chess {
 
     namespace
     {
+        bool is_pawn_double_jump(Move const& move)
+        {
+            auto const& sq = move.result[move.dest];
+            auto const dy = move.src.y() - move.dest.y();
+
+            return (sq.type() == SquareType::pawn) && std::abs(dy) == 2;
+        }
+
         std::optional<Loc> find_loc_of(Board const &b, Square sq)
         {
             for (auto const& loc : Loc::all_squares())
@@ -104,6 +112,19 @@ namespace chess {
                 if (sq.colour() == current_colour)
                 {
                     generate_for(sq, loc);
+                }
+            }
+
+            // TODO: Better moved to pawn move generation.
+            for (auto & move : list)
+            {
+                if (is_pawn_double_jump(move))
+                {
+                    move.result.last_turn_pawn_double_jump_dest = move.dest;
+                }
+                else
+                {
+                    move.result.last_turn_pawn_double_jump_dest = std::nullopt;
                 }
             }
 
@@ -289,7 +310,6 @@ namespace chess {
             // Must be a promotion if we're going to land on either end of the board.
             if (non_capture_dest && (non_capture_dest->y() == Loc::side_size - 1 || non_capture_dest->y() == 0))
             {
-                // TODO: Test cant promote if piece in way
                 if (is_empty(*non_capture_dest))
                 {
                     add_promotions(src, *non_capture_dest);
@@ -446,7 +466,7 @@ namespace chess {
         {
             // Must do before assuming the move.
             auto current_colour = board.turn;
-            board.force_move(current_move);
+            board = current_move.result;
 
             auto king_loc = find_loc_of(board, King(current_colour));
             auto potentials = potential_moves(board);
@@ -483,8 +503,8 @@ namespace chess {
         {
             // Must do before assuming the move.
             auto opposite_colour = (board.turn == Colour::white) ? Colour::black : Colour::white;
-            board.force_move(current_move); // make the move
-            board.force_move({"A1", "A1", board}); // skip next move.
+            board = current_move.result; // make the move
+            board.turn = flip_colour(board.turn);
 
             auto king_loc = find_loc_of(board, King(opposite_colour));
             auto potentials = potential_moves(board);
@@ -501,17 +521,16 @@ namespace chess {
     std::vector<Move> available_moves(Board const& board)
     {
         auto potentials = potential_moves(board);
-        auto board_copy = board;
 
-        auto it = std::remove_if(begin(potentials), end(potentials), [&board_copy](Move const& move) {
-            return causes_mover_to_be_in_check(board_copy, move);
+        auto it = std::remove_if(begin(potentials), end(potentials), [&board](Move const& move) {
+            return causes_mover_to_be_in_check(board, move);
         });
         potentials.erase(it, end(potentials));
 
         // For each potential move, skip next player, see if current player could take king on next go
         // ie the move causes check.
-        std::for_each(begin(potentials), end(potentials), [&board_copy](Move & move) {
-            move.caused_check = caused_check(board_copy, move);
+        std::for_each(begin(potentials), end(potentials), [&board](Move & move) {
+            move.caused_check = caused_check(board, move);
         });
 
         return potentials;

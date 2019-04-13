@@ -13,7 +13,7 @@ namespace chess
 
     struct Game
     {
-        Game(Driver &);
+        explicit Game(Driver &);
         Game(Driver &, Board);
 
         Board board() const;
@@ -21,7 +21,6 @@ namespace chess
         bool move(Loc src, Loc dest);
 
         Colour current_turn() const;
-        std::optional<Loc> const& last_turn_pawn_double_jump_dest() const;
 
     private:
         Board m_board;

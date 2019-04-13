@@ -66,7 +66,7 @@ namespace
             return false;
         }
 
-        board.force_move(move);
+        board = move.result;
         auto next_moves = chess::available_moves(board);
         return next_moves.empty();
     }

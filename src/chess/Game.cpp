@@ -44,11 +44,6 @@ Colour Game::current_turn() const
     return m_board.turn;
 }
 
-std::optional<Loc> const& Game::last_turn_pawn_double_jump_dest() const
-{
-    return m_board.last_turn_pawn_double_jump_dest;
-}
-
 bool Game::move(Loc src, Loc dest)
 {
     auto moves = get_moves_for(*this, src);
@@ -57,7 +52,7 @@ bool Game::move(Loc src, Loc dest)
     if (move_it != std::end(moves))
     {
         handle_promotion(*move_it);
-        m_board.force_move(*move_it);
+        m_board = move_it->result;
         handle_checkmate(*move_it);
         return true;
     }

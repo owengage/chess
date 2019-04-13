@@ -90,11 +90,6 @@ std::vector<Loc> Loc::direction(Loc origin, int dx, int dy)
     return locs;
 }
 
-Loc chess::operator+(Loc lhs, Loc rhs)
-{
-    return {lhs.m_x + rhs.m_x, lhs.m_y + rhs.m_y};
-}
-
 bool chess::operator==(Loc lhs, Loc rhs)
 {
     return lhs.m_x == rhs.m_x && lhs.m_y == rhs.m_y;

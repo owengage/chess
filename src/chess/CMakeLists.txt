@@ -14,4 +14,5 @@ target_sources(chess
         Board.cpp
         Game.cpp
         available_moves.cpp
-        BasicDriver.cpp)
+        BasicDriver.cpp
+        Suggester.cpp)

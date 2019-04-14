@@ -6,8 +6,8 @@ moves are available. There is also a PGN parser and validator.
 
 ## Current work
 
-I need to start work on either the chess engine to actually suggest moves, or on benchmarking to speed up the code that
-I've got.
+Basic chess engine! If you build the 'play' executable to you can play a very unpolished game of chess. Don't expect to
+win, it'll just end the game instead.
 
 ## TODOs
 

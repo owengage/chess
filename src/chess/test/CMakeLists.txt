@@ -22,3 +22,20 @@ target_link_libraries(move_test
         chess-test)
 
 add_test(NAME move_test COMMAND move_test)
+
+#
+# suggester_test
+#
+
+add_executable(suggester_test)
+
+target_sources(suggester_test
+        PRIVATE
+        suggester_test.cpp)
+
+target_link_libraries(suggester_test
+        PRIVATE
+        chess
+        chess-test)
+
+add_test(NAME suggester_test COMMAND suggester_test)

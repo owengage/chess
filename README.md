@@ -13,11 +13,16 @@ win, it'll just end the game instead.
 
 * [x] Write chess game and ability to generate all legal moves
 * [x] Write Algebraic Notation or Portable Game Notation parser
-* [x] Automated chess player
+* [ ] Automated chess player
+* [ ] Alpha-Beta pruning
+* [ ] Move ordering
 * [ ] Speed up move generation via benchmarking
 * [ ] Better chess viewer
 * [ ] Implement stalemate through 'inactivity'
-* [ ] Use more target based CMake
+
+###### Small things
+
+* [ ] Change `Driver::promote()` to just return a `SquareType`.
 
 ## Implementation notes
 

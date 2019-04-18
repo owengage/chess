@@ -22,7 +22,7 @@ namespace chess
         bool try_move(Loc src, Loc dest)
         {
             auto g = with_wbishop_at(src);
-            return g.move(src, dest);
+            return MoveType::stalemate == g.move(src, dest);
         }
     };
 
@@ -78,7 +78,7 @@ namespace chess
             {"D4", wbishop},
         })};
 
-        EXPECT_FALSE(game.move("B2", "E5"));
+        EXPECT_EQ(MoveType::invalid, game.move("B2", "E5"));
     }
 
     TEST_F(MoveBishopFixture, can_capture)
@@ -88,7 +88,7 @@ namespace chess
             {"D4", Bishop(Colour::black)}
         })};
 
-        EXPECT_TRUE(game.move("B2", "D4"));
+        EXPECT_EQ(MoveType::stalemate, game.move("B2", "D4"));
     }
 
 }

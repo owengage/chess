@@ -32,7 +32,7 @@ namespace chess
         b["D4"] = bknight;
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("C2", "D4"));
+        EXPECT_EQ(MoveType::stalemate, g.move("C2", "D4"));
         EXPECT_EQ(wknight, g.board()["D4"]);
         EXPECT_EQ(empty, g.board()["C2"]);
     }
@@ -44,7 +44,7 @@ namespace chess
         b["D4"] = wknight;
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("C2", "D4"));
+        EXPECT_EQ(MoveType::invalid, g.move("C2", "D4"));
         EXPECT_EQ(wknight, g.board()["D4"]);
         EXPECT_EQ(wknight, g.board()["C2"]);
     }
@@ -58,7 +58,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("C4", "D6"));
+        EXPECT_EQ(MoveType::invalid, g.move("C4", "D6"));
     }
 
     TEST_F(MoveGeneralFixture, cant_move_king_into_direct_danger)
@@ -69,7 +69,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("C3", "D3"));
+        EXPECT_EQ(MoveType::invalid, g.move("C3", "D3"));
     }
 
     TEST_F(MoveGeneralFixture, can_move_king_out_check)
@@ -80,7 +80,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("D1", "C1"));
+        EXPECT_EQ(MoveType::normal, g.move("D1", "C1"));
     }
 
     TEST_F(MoveGeneralFixture, can_queen_side_castle)
@@ -91,7 +91,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::stalemate, g.move("E1", "C1"));
         EXPECT_EQ(wking, g.board()["C1"]);
         EXPECT_EQ(wrook, g.board()["D1"]);
     }
@@ -105,7 +105,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "C1"));
     }
 
     TEST_F(MoveGeneralFixture, cant_queen_side_castle_through_targeted_square)
@@ -117,7 +117,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "C1"));
     }
 
     TEST_F(MoveGeneralFixture, cant_queen_side_castle_if_dest_sq_checked)
@@ -129,7 +129,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "C1"));
     }
 
 
@@ -142,12 +142,12 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("A1", "A2")); // move rook
-        EXPECT_TRUE(g.move("F7", "F6")); // move pawn to get back to white
-        EXPECT_TRUE(g.move("A2", "A1")); // move rook back
-        EXPECT_TRUE(g.move("F6", "F5")); // pawn again
+        EXPECT_EQ(MoveType::normal, g.move("A1", "A2")); // move rook
+        EXPECT_EQ(MoveType::normal, g.move("F7", "F6")); // move pawn to get back to white
+        EXPECT_EQ(MoveType::normal, g.move("A2", "A1")); // move rook back
+        EXPECT_EQ(MoveType::normal, g.move("F6", "F5")); // pawn again
 
-        EXPECT_FALSE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "C1"));
     }
 
     TEST_F(MoveGeneralFixture, cant_queen_side_castle_if_king_has_moved)
@@ -159,12 +159,12 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("E1", "E2")); // move king
-        EXPECT_TRUE(g.move("F7", "F6")); // move pawn to get back to white
-        EXPECT_TRUE(g.move("E2", "E1")); // move king back
-        EXPECT_TRUE(g.move("F6", "F5")); // pawn again
+        EXPECT_EQ(MoveType::normal, g.move("E1", "E2")); // move king
+        EXPECT_EQ(MoveType::normal, g.move("F7", "F6")); // move pawn to get back to white
+        EXPECT_EQ(MoveType::normal, g.move("E2", "E1")); // move king back
+        EXPECT_EQ(MoveType::normal, g.move("F6", "F5")); // pawn again
 
-        EXPECT_FALSE(g.move("E1", "C1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "C1"));
     }
 
     TEST_F(MoveGeneralFixture, can_king_side_castle)
@@ -175,7 +175,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("E1", "G1"));
+        EXPECT_EQ(MoveType::stalemate, g.move("E1", "G1"));
         EXPECT_EQ(wking, g.board()["G1"]);
         EXPECT_EQ(wrook, g.board()["F1"]);
     }
@@ -189,7 +189,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("E1", "G1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "G1"));
     }
 
     TEST_F(MoveGeneralFixture, cant_queen_side_castle_with_piece_in_way)
@@ -201,7 +201,7 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        EXPECT_FALSE(g.move("E1", "B1"));
+        EXPECT_EQ(MoveType::invalid, g.move("E1", "B1"));
     }
 
     TEST_F(MoveGeneralFixture, move_causing_checkmate_calls_driver)
@@ -213,12 +213,24 @@ namespace chess
         });
         auto g = Game{driver, b};
 
-        // This fails because I changed storage to the board...
-
         EXPECT_CALL(driver, checkmate(_,_));
 
-        EXPECT_TRUE(g.move("A1", "A2")); // get to black's move
-        EXPECT_TRUE(g.move("C7", "A7")); // rook to checkmate
+        EXPECT_EQ(MoveType::normal, g.move("A1", "A2")); // get to black's move
+        EXPECT_EQ(MoveType::checkmate, g.move("C7", "A7")); // rook to checkmate
+    }
+
+    TEST_F(MoveGeneralFixture, move_causing_checkmate_returns_checkmate)
+    {
+        auto b = Board::with_pieces({
+                {"C7", brook},
+                {"B8", brook},
+                {"A1", wking},
+        });
+        auto g = Game{driver, b};
+
+        g.move("A1", "A2");
+
+        EXPECT_EQ(MoveType::checkmate, g.move("C7", "A7")); // rook to checkmate
     }
 
     TEST_F(MoveGeneralFixture, move_causing_stalemate_calls_driver)
@@ -232,7 +244,7 @@ namespace chess
 
         EXPECT_CALL(driver, stalemate(_,_));
 
-        EXPECT_TRUE(g.move("H3", "H2")); // king has no where to move, stalemate.
+        EXPECT_EQ(MoveType::stalemate, g.move("H3", "H2")); // king has no where to move, stalemate.
     }
 
     // TODO: Weird checks if king start position is not standard...

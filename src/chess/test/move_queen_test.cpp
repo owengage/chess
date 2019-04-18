@@ -22,7 +22,7 @@ namespace chess
         bool try_move(Loc src, Loc dest)
         {
             auto g = with_wqueen_at(src);
-            return g.move(src, dest);
+            return MoveType::stalemate == g.move(src, dest);
         }
     };
     
@@ -122,7 +122,7 @@ namespace chess
             {"D4", wqueen},
         })};
 
-        EXPECT_FALSE(game.move("B2", "E5"));
+        EXPECT_EQ(MoveType::invalid, game.move("B2", "E5"));
     }
 
     TEST_F(MoveQueenFixture, can_capture)
@@ -132,7 +132,7 @@ namespace chess
             {"D4", Queen(Colour::black)}
         })};
 
-        EXPECT_TRUE(game.move("B2", "D4"));
+        EXPECT_EQ(MoveType::stalemate, game.move("B2", "D4"));
     }
 
 }

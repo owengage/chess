@@ -7,6 +7,7 @@
 
 using chess::Loc;
 using chess::Game;
+using chess::MoveType;
 using chess::Player;
 using chess::Board;
 using chess::Square;
@@ -44,7 +45,7 @@ Colour Game::current_turn() const
     return m_board.turn;
 }
 
-bool Game::move(Loc src, Loc dest)
+MoveType Game::move(Loc src, Loc dest)
 {
     auto moves = get_moves_for(*this, src);
     auto move_it = std::find_if(begin(moves), end(moves), [dest](Move m) { return m.dest == dest; });
@@ -53,11 +54,10 @@ bool Game::move(Loc src, Loc dest)
     {
         handle_promotion(*move_it);
         m_board = move_it->result;
-        handle_checkmate(*move_it);
-        return true;
+        return handle_mate(*move_it);
     }
 
-    return false;
+    return MoveType::invalid;
 }
 
 void Game::handle_promotion(chess::Move & move)
@@ -81,7 +81,7 @@ void Game::handle_promotion(chess::Move & move)
     }
 }
 
-void Game::handle_checkmate(Move const& move)
+MoveType Game::handle_mate(Move const &move)
 {
     auto moves = available_moves(m_board);
     if (moves.empty())
@@ -89,10 +89,14 @@ void Game::handle_checkmate(Move const& move)
         if (move.caused_check)
         {
             m_driver.checkmate(*this, move);
+            return MoveType::checkmate;
         }
         else
         {
             m_driver.stalemate(*this, move);
+            return MoveType::stalemate;
         }
     }
+
+    return MoveType::normal;
 }

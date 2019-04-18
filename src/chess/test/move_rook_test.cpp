@@ -22,7 +22,7 @@ namespace chess
         bool try_move(Loc src, Loc dest)
         {
             auto g = with_wrook_at(src);
-            return g.move(src, dest);
+            return MoveType::stalemate == g.move(src, dest);
         }
     };
 
@@ -45,7 +45,7 @@ namespace chess
             {"C5", wrook},
         })};
 
-        EXPECT_FALSE(game.move("C1", "C6"));
+        EXPECT_EQ(MoveType::invalid, game.move("C1", "C6"));
     }
 
     TEST_F(MoveRookFixture, can_capture_up)
@@ -55,7 +55,7 @@ namespace chess
             {"C5", Rook(Colour::black)}
         })};
 
-        EXPECT_TRUE(game.move("C1", "C5"));
+        EXPECT_EQ(MoveType::stalemate, game.move("C1", "C5"));
     }
 
     TEST_F(MoveRookFixture, can_move_down)

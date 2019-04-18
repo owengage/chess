@@ -25,7 +25,7 @@ namespace chess
         bool try_move(Loc src, Loc dest)
         {
             auto g = with_wknight_at(src);
-            return g.move(src, dest);
+            return MoveType::stalemate == g.move(src, dest);
         }
     };
 
@@ -52,6 +52,6 @@ namespace chess
         b["A1"] = wknight;
         auto g = Game{driver, b};
 
-        EXPECT_TRUE(g.move("A1", "B3"));
+        EXPECT_EQ(MoveType::normal, g.move("A1", "B3"));
     }
 }

@@ -23,7 +23,7 @@ namespace chess
         bool try_move(Loc src, Loc dest)
         {
             auto g = with_wking_at(src);
-            return g.move(src, dest);
+            return MoveType::stalemate == g.move(src, dest);
         }
     };
 
@@ -46,7 +46,7 @@ namespace chess
             {"B3", Knight(Colour::black)}
         })};
 
-        EXPECT_TRUE(game.move("B2", "B3"));
+        EXPECT_EQ(MoveType::stalemate, game.move("B2", "B3"));
     }
 
 }

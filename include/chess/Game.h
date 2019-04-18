@@ -11,6 +11,14 @@ namespace chess
     struct Game;
     struct Driver;
 
+    enum struct MoveType
+    {
+        invalid,
+        normal,
+        checkmate,
+        stalemate
+    };
+
     struct Game
     {
         explicit Game(Driver &);
@@ -18,7 +26,7 @@ namespace chess
 
         Board board() const;
 
-        bool move(Loc src, Loc dest);
+        MoveType move(Loc src, Loc dest);
 
         Colour current_turn() const;
 
@@ -27,6 +35,6 @@ namespace chess
         Driver & m_driver;
 
         void handle_promotion(Move &);
-        void handle_checkmate(Move const&);
+        MoveType handle_mate(Move const &move);
     };
 }

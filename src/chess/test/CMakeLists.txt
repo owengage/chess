@@ -31,7 +31,8 @@ add_executable(suggester_test)
 
 target_sources(suggester_test
         PRIVATE
-        suggester_test.cpp)
+        suggester_test.cpp
+        tree_test.cpp)
 
 target_link_libraries(suggester_test
         PRIVATE

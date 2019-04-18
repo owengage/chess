@@ -13,8 +13,8 @@ win, it'll just end the game instead.
 
 * [x] Write chess game and ability to generate all legal moves
 * [x] Write Algebraic Notation or Portable Game Notation parser
+* [x] Automated chess player
 * [ ] Speed up move generation via benchmarking
-* [ ] Automated chess player
 * [ ] Better chess viewer
 * [ ] Implement stalemate through 'inactivity'
 * [ ] Use more target based CMake

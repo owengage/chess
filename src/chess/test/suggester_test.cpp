@@ -9,7 +9,7 @@ namespace chess
     {
         auto board = Board::with_pieces({
                 {"A2", Pawn(Colour::white)},
-                {"A4", Pawn(Colour::black)}
+                {"D7", Pawn(Colour::black)}
         });
 
         auto suggester = Suggester{board, evaluate_with_summation};
@@ -23,4 +23,6 @@ namespace chess
         auto suggester = Suggester{board, evaluate_with_summation};
         auto move = suggester.suggest();
     }
+
+    // TODO: Test checkmate/stalemate
 }

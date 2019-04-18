@@ -38,18 +38,77 @@ namespace
 
 Suggester::Suggester(Board board, EvalFunc eval_func) :
     m_current{std::move(board)},
-    m_eval{std::move(eval_func)}
-{}
+    m_eval{std::move(eval_func)},
+    m_tree{Evaluation{0, Move{"A1", "A1", m_current}}}
+{
+    auto depth = 4;
+    build_tree(m_tree, depth);
+}
+
+void Suggester::build_tree(Tree<Evaluation> & root, int depth)
+{
+    auto const& board = root.value().move.result;
+
+    if (depth == 0)
+    {
+        root.value().score = m_eval(root.value().move.result);
+        return;
+    }
+
+    auto moves = available_moves(board);
+
+    if (moves.empty())
+    {
+        root.value().score = m_eval(root.value().move.result);
+        return;
+    }
+
+    for (auto const& move : moves)
+    {
+        auto & child = root.add_child(Evaluation{0, move});
+        build_tree(child, depth - 1);
+    }
+
+    // Layer below us is already evaluated due to recursion
+    auto const& children = root.children();
+    auto score = Score{};
+    auto maximise = [](Score current, Score child) { return std::max(current, child); };
+    auto minimise = [](Score current, Score child) { return std::min(current, child); };
+    auto compare = root.value().move.result.turn == Colour::white ? maximise : minimise;
+
+    for (auto const& child : children)
+    {
+        score = compare(child.value().score, score);
+    }
+
+    root.value().score = score;
+}
 
 Move Suggester::suggest() const
 {
-    auto moves = available_moves(m_current);
-    auto min_max_it = std::minmax_element(begin(moves), end(moves), [this](Move const& lhs, Move const& rhs)
-    {
-        return m_eval(lhs.result) < m_eval(rhs.result);
-    });
+    Evaluation const * min = nullptr;
+    Evaluation const * max = nullptr;
 
-    return m_current.turn == Colour::white ? *min_max_it.second : *min_max_it.first;
+    for (auto const& child : m_tree.children())
+    {
+        auto score = child.value().score;
+        if (!min || score < min->score)
+        {
+            min = &child.value();
+        }
+
+        if (!max || score > max->score)
+        {
+            max = &child.value();
+        }
+    }
+
+    if (!min || !max)
+    {
+        throw std::runtime_error{"Found no moves."};
+    }
+
+    return m_current.turn == Colour::white ? max->move : min->move;
 }
 
 Score chess::evaluate_with_summation(Board const& board)

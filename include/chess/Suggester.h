@@ -9,7 +9,7 @@
 namespace chess
 {
     using Score = int;
-    using EvalFunc = std::function<Score(Board const&)>;
+    using EvalFunc = std::function<Score(Move const&)>;
     struct Move;
 
     struct Suggester
@@ -32,5 +32,5 @@ namespace chess
         void build_tree(Tree<Evaluation> & root, int depth);
     };
 
-    Score evaluate_with_summation(Board const&);
+    Score evaluate_with_summation(Move const&);
 }

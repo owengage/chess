@@ -60,23 +60,23 @@ int main()
 
     while (last_move == MoveType::normal)
     {
-//        do
-//        {
-//            std::cout << "Enter move source: ";
-//            std::cin >> move_src;
-//
-//            std::cout << "Enter move destination: ";
-//            std::cin >> move_dest;
-//
-//            last_move = game.move(move_src.c_str(), move_dest.c_str());
-//            if (last_move == MoveType::invalid)
-//            {
-//                std::cout << "Incorrect move, try again.\n";
-//            }
-//        }
-//        while (last_move == MoveType::invalid);
+        do
+        {
+            chess::text::print(std::cout, game.board());
 
-        chess::text::print(std::cout, game.board());
+            std::cout << "Enter move source: ";
+            std::cin >> move_src;
+
+            std::cout << "Enter move destination: ";
+            std::cin >> move_dest;
+
+            last_move = game.move(move_src.c_str(), move_dest.c_str());
+            if (last_move == MoveType::invalid)
+            {
+                std::cout << "Incorrect move, try again.\n";
+            }
+        }
+        while (last_move == MoveType::invalid);
 
         auto suggester = chess::Suggester{game.board(), chess::evaluate_with_summation};
         auto suggestion = suggester.suggest();

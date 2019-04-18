@@ -51,7 +51,7 @@ void Suggester::build_tree(Tree<Evaluation> & root, int depth)
 
     if (depth == 0)
     {
-        root.value().score = m_eval(root.value().move.result);
+        root.value().score = m_eval(root.value().move);
         return;
     }
 
@@ -59,7 +59,7 @@ void Suggester::build_tree(Tree<Evaluation> & root, int depth)
 
     if (moves.empty())
     {
-        root.value().score = m_eval(root.value().move.result);
+        root.value().score = m_eval(root.value().move);
         return;
     }
 
@@ -111,13 +111,14 @@ Move Suggester::suggest() const
     return m_current.turn == Colour::white ? max->move : min->move;
 }
 
-Score chess::evaluate_with_summation(Board const& board)
+Score chess::evaluate_with_summation(Move const& move)
 {
     Score score = 0;
 
     for (auto const& loc : Loc::all_squares())
     {
-        score += score_square(board[loc]);
+        score += score_square(move.result[loc]);
+        score += move.caused_check ? 10 : 0;
     }
 
     return score;

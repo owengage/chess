@@ -1,8 +1,8 @@
-# C++ Chess WIP
+# C++ Chess
 
-A chess game/engine written in C++. So far all chess moves have been encoded in the game, allowing a user to generate
+A chess game/engine written in C++. All chess moves have been encoded in the game, allowing a user to generate
 all possible moves allowable. This includes checking for en passant, castling, check, checkmate, and stalemate when no
-moves are available. There is also a PGN parser and validator.
+moves are available. There is also a PGN parser, PGN validator and Minimax chess engine.
 
 ## Current work
 
@@ -31,9 +31,9 @@ changes nearly halved the suggestion time for a standard start board. I need to 
 * [x] Write chess game and ability to generate all legal moves
 * [x] Write Algebraic Notation or Portable Game Notation parser
 * [x] Automated chess player
+* [ ] Speed up move generation via benchmarking
 * [ ] Alpha-Beta pruning
 * [ ] Move ordering
-* [ ] Speed up move generation via benchmarking
 * [ ] Better chess viewer
 * [ ] Implement stalemate through 'inactivity'
 

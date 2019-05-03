@@ -15,10 +15,16 @@ A new namespace `perf` has popped up to contain performance related types. The f
 This is a thin vector-like type that has a maximum capacity and lives on the stack. This helps avoid lots of allocations
 when I know the maximum size ahead of time.
 
-This was used for `Loc::direction` which would generate all the locations in a certain direction from a given start
+### Location optimisations
+
+`StackVector` was used for `Loc::direction` which would generate all the locations in a certain direction from a given start
 point. Since the chess board is only 8 across, you know this function will never return more than 8 locations. So simply
 storing these on the stack is a lot quicker. My 4-deep exhaustive chess engine took 1.75 s before, and 1.34 s after this
 change on my machine, a fairly nice improvement.
+
+Further to that change, I made a lot of `Loc` `constexpr` and changed from storing `x` and `y` to storing a computed
+index, since getting this index seemed more common. The 4-deep exhaustive went from 1.34 s down to 0.96 s. So these two
+changes nearly halved the suggestion time for a standard start board. I need to start using a more representative board.
 
 ## TODOs
 

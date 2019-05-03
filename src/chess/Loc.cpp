@@ -22,14 +22,6 @@ namespace
 LocInvalid::LocInvalid(int x, int y) : std::runtime_error{"Invalid Loc m_x=" + std::to_string(x) + ", y=" + std::to_string(y)}
 {}
 
-Loc::Loc(int x, int y) : m_index{y*side_size+x}
-{
-    if (x >= side_size || y >= side_size)
-    {
-        throw LocInvalid{x,y};
-    }
-}
-
 std::vector<Loc> Loc::row(int y)
 {
     std::vector<Loc> locs;
@@ -64,7 +56,7 @@ std::optional<Loc> Loc::add_delta(Loc lhs, int dx, int dy)
     }
 }
 
-perf::StackVector<Loc, 8> Loc::direction(Loc origin, int dx, int dy)
+perf::StackVector<Loc, Loc::side_size> Loc::direction(Loc origin, int dx, int dy)
 {
     auto locs = perf::StackVector<Loc, 8>{};
 
@@ -80,6 +72,7 @@ perf::StackVector<Loc, 8> Loc::direction(Loc origin, int dx, int dy)
 bool chess::operator==(Loc lhs, Loc rhs)
 {
     return lhs.m_index == rhs.m_index;
+    //return lhs.m_x == rhs.m_x && lhs.m_y == rhs.m_y;
 }
 
 bool chess::operator!=(Loc lhs, Loc rhs)

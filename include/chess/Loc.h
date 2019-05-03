@@ -18,7 +18,13 @@ namespace chess
         static constexpr int side_size = 8;
         static constexpr int board_size = side_size * side_size;
 
-        Loc(int x, int y);
+        constexpr Loc(int x, int y) : m_index{y*side_size+x}
+        {
+            if (x >= side_size || y >= side_size)
+            {
+                throw LocInvalid{x,y};
+            }
+        }
 
         constexpr Loc(char const * letternum) :
                 m_index{(letternum[1] - '1')*side_size + (letternum[0] - 'A')}
@@ -47,16 +53,14 @@ namespace chess
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
         static std::optional<Loc> add_delta(Loc lhs, int x, int y);
-        static perf::StackVector<Loc, 8> direction(Loc origin, int dx, int dy);
+        static perf::StackVector<Loc, side_size> direction(Loc origin, int dx, int dy);
     private:
         int m_index;
 
-        friend Loc operator+(Loc, Loc);
         friend bool operator==(Loc, Loc);
         friend bool operator!=(Loc, Loc);
     };
 
-    Loc operator+(Loc lhs, Loc rhs);
     bool operator==(Loc lhs, Loc rhs);
     bool operator!=(Loc lhs, Loc rhs);
 }

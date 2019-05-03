@@ -11,14 +11,6 @@ namespace chess
     struct Game;
     struct Driver;
 
-    enum struct MoveType
-    {
-        invalid,
-        normal,
-        checkmate,
-        stalemate
-    };
-
     struct Game
     {
         explicit Game(Driver &);

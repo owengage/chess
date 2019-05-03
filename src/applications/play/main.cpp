@@ -39,6 +39,8 @@ namespace
         {
             case MoveType::invalid:
                 os << "invalid";
+            case MoveType::check:
+                os << "check";
             case MoveType::normal:
                 os << "normal";
             case MoveType::checkmate:

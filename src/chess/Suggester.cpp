@@ -118,7 +118,8 @@ Score chess::evaluate_with_summation(Move const& move)
     for (auto const& loc : Loc::all_squares())
     {
         score += score_square(move.result[loc]);
-        score += move.caused_check ? 10 : 0;
+        score += (move.type == MoveType::check) ? 10 : 0;
+        score += (move.type == MoveType::checkmate) ? 10000 : 0;
     }
 
     return score;

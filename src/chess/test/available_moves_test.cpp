@@ -18,9 +18,29 @@ MATCHER_P2(contains_loc_with_sq, loc, sq, "")
 
 namespace chess
 {
-    struct AvailableMovesFixture : public GameFixture
+    namespace
     {
-    };
+        Move find_first(Loc src, Loc dest, std::vector<Move> moves)
+        {
+            auto it = find_if(moves.begin(), moves.end(), [&src, &dest](Move m)
+            {
+                return m.src == src && m.dest == dest;
+            });
+
+            if (it != moves.end())
+            {
+                return *it;
+            }
+            else
+            {
+                throw std::logic_error{"Did not find at least one move"};
+            }
+        }
+
+        struct AvailableMovesFixture : public GameFixture
+        {
+        };
+    }
 
     TEST_F(AvailableMovesFixture, standard_start_should_have_20_moves)
     {
@@ -41,5 +61,20 @@ namespace chess
         EXPECT_THAT(moves, contains_loc_with_sq("A8", Bishop(Colour::white)));
         EXPECT_THAT(moves, contains_loc_with_sq("A8", Knight(Colour::white)));
         EXPECT_THAT(moves, contains_loc_with_sq("A8", Queen(Colour::white)));
+    }
+
+    TEST_F(AvailableMovesFixture, move_causing_checkmate_says_so)
+    {
+        auto board = Board::with_pieces({
+                {"C7", Rook(Colour::black)},
+                {"B8", Rook(Colour::black)},
+                {"A1", King(Colour::white)},
+        });
+        board.turn = Colour::black;
+
+        auto moves = available_moves(board);
+        auto move = find_first("C7", "A7", moves);
+
+        EXPECT_EQ(MoveType::checkmate, move.type);
     }
 }

@@ -84,9 +84,11 @@ void Game::handle_promotion(chess::Move & move)
 MoveType Game::handle_mate(Move const &move)
 {
     auto moves = available_moves(m_board);
+    // TODO: Don't need to get available moves, need available_moves from before to distinguish between checkmate and
+    // stalemate. Though might take even more computation...
     if (moves.empty())
     {
-        if (move.caused_check)
+        if (move.type == MoveType::checkmate)
         {
             m_driver.checkmate(*this, move);
             return MoveType::checkmate;

@@ -9,6 +9,14 @@ moves are available. There is also a PGN parser and validator.
 Basic chess engine! If you build the 'play' executable to you can play a very unpolished game of chess. Don't expect to
 win, it'll just end the game instead.
 
+Due to the design of the `available_moves` function, it doesn't return moves that capture the king, as they would not be
+valid moves. Coupled with the Chess engine trying to optimise the board value by just summing pieces, the engine never
+tries to actually win, since there are no moves it evaluates that take the king. This means the engine plays fine until
+you get near to the end game, at which it falls apart.
+
+I believe `available_moves` should not return these king taking moves: they're not valid moves! Instead I'll encode the
+fact that a move is checkmate in the returned moves. This way the evaluation can give this a high favour.
+
 ## TODOs
 
 * [x] Write chess game and ability to generate all legal moves

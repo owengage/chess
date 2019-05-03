@@ -5,12 +5,21 @@
 
 namespace chess
 {
+    enum struct MoveType
+    {
+        invalid,
+        normal,
+        check,
+        checkmate,
+        stalemate
+    };
+
     struct Move
     {
         Loc src;
         Loc dest;
         Board result;
-        bool caused_check = false;
+        MoveType type = MoveType::invalid;
         bool is_promotion = false;
     };
 }

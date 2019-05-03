@@ -288,16 +288,16 @@ namespace chess {
             new_board[src] = Empty();
 
             new_board[dest].set_type(SquareType::rook);
-            list.push_back({src, dest, new_board, false, true});
+            list.push_back({src, dest, new_board, MoveType::normal, true});
 
             new_board[dest].set_type(SquareType::bishop);
-            list.push_back({src, dest, new_board, false, true});
+            list.push_back({src, dest, new_board, MoveType::normal, true});
 
             new_board[dest].set_type(SquareType::knight);
-            list.push_back({src, dest, new_board, false, true});
+            list.push_back({src, dest, new_board, MoveType::normal, true});
 
             new_board[dest].set_type(SquareType::queen);
-            list.push_back({src, dest, new_board, false, true});
+            list.push_back({src, dest, new_board, MoveType::normal, true});
         }
 
         void PotentialMoves::generate_promotions(Square p, Loc src)
@@ -499,7 +499,7 @@ namespace chess {
             return in_check;
         }
 
-        bool caused_check(Board board, Move & current_move)
+        MoveType determine_if_causes_check(Board board, Move const& current_move)
         {
             // Must do before assuming the move.
             auto opposite_colour = (board.turn == Colour::white) ? Colour::black : Colour::white;
@@ -509,12 +509,41 @@ namespace chess {
             auto king_loc = find_loc_of(board, King(opposite_colour));
             auto potentials = potential_moves(board);
 
-            bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
+            auto it = std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
             {
                 return m.dest == king_loc;
             });
 
-            return in_check;
+            bool in_check = end(potentials) != it;
+
+            return in_check ? MoveType::check : MoveType::normal;
+        }
+
+
+        MoveType determine_if_causes_checkmate(Board board, Move const& current_move)
+        {
+            // We know that the move given causes check for the other player
+            // We want to determine if it is checkmate.
+            // ie, if I make the move, the other player cannot play another move that gets them out of check.
+
+            board = current_move.result; // make the move that causes check.
+            auto potentials = potential_moves(board); // get moves for other player
+
+            // Filter out moves that put the enemy in check.
+            auto it = std::remove_if(begin(potentials), end(potentials), [&board](Move const& move)
+            {
+                return causes_mover_to_be_in_check(board, move);
+            });
+            potentials.erase(it, end(potentials));
+
+            if (potentials.empty())
+            {
+                return MoveType::checkmate;
+            }
+            else
+            {
+                return MoveType::check;
+            }
         }
     }
 
@@ -522,7 +551,8 @@ namespace chess {
     {
         auto potentials = potential_moves(board);
 
-        auto it = std::remove_if(begin(potentials), end(potentials), [&board](Move const& move) {
+        auto it = std::remove_if(begin(potentials), end(potentials), [&board](Move const& move)
+        {
             return causes_mover_to_be_in_check(board, move);
         });
         potentials.erase(it, end(potentials));
@@ -530,7 +560,16 @@ namespace chess {
         // For each potential move, skip next player, see if current player could take king on next go
         // ie the move causes check.
         std::for_each(begin(potentials), end(potentials), [&board](Move & move) {
-            move.caused_check = caused_check(board, move);
+            move.type = determine_if_causes_check(board, move);
+        });
+
+        // Want to check for checkmate for each move that causes check.
+        std::for_each(begin(potentials), end(potentials), [&board](Move & move)
+        {
+            if (move.type == MoveType::check)
+            {
+                move.type = determine_if_causes_checkmate(board, move);
+            }
         });
 
         return potentials;

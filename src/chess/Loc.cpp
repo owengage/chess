@@ -1,4 +1,5 @@
 #include <chess/Loc.h>
+#include <perf/StackVector.h>
 
 using chess::LocInvalid;
 using chess::Loc;
@@ -78,9 +79,10 @@ std::optional<Loc> Loc::add_delta(Loc lhs, int dx, int dy)
     }
 }
 
-std::vector<Loc> Loc::direction(Loc origin, int dx, int dy)
+perf::StackVector<Loc, 8> Loc::direction(Loc origin, int dx, int dy)
 {
-    std::vector<Loc> locs;
+    auto locs = perf::StackVector<Loc, 8>{};
+
     std::optional<Loc> current = origin;
     while (current && (current = Loc::add_delta(*current, dx, dy)))
     {

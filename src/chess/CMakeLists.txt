@@ -1,6 +1,7 @@
 add_subdirectory(text)
 add_subdirectory(pgn)
 add_subdirectory(test)
+add_subdirectory(bench)
 
 add_library(chess)
 
@@ -16,3 +17,6 @@ target_sources(chess
         available_moves.cpp
         BasicDriver.cpp
         Suggester.cpp)
+
+target_link_libraries(chess
+        chess-perf)

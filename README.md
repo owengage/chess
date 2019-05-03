@@ -6,22 +6,25 @@ moves are available. There is also a PGN parser and validator.
 
 ## Current work
 
-Basic chess engine! If you build the 'play' executable to you can play a very unpolished game of chess. Don't expect to
-win, it'll just end the game instead.
+Performance!
 
-Due to the design of the `available_moves` function, it doesn't return moves that capture the king, as they would not be
-valid moves. Coupled with the Chess engine trying to optimise the board value by just summing pieces, the engine never
-tries to actually win, since there are no moves it evaluates that take the king. This means the engine plays fine until
-you get near to the end game, at which it falls apart.
+I've started to micro-benchmark parts of the codebase to improve the speed. Given a big enough improvement the chess
+engine will be able to search deeper, or at least respond a little faster.
 
-I believe `available_moves` should not return these king taking moves: they're not valid moves! Instead I'll encode the
-fact that a move is checkmate in the returned moves. This way the evaluation can give this a high favour.
+A new namespace `perf` has popped up to contain performance related types. The first thing to enter is `StackVector`.
+This is a thin vector-like type that has a maximum capacity and lives on the stack. This helps avoid lots of allocations
+when I know the maximum size ahead of time.
+
+This was used for `Loc::direction` which would generate all the locations in a certain direction from a given start
+point. Since the chess board is only 8 across, you know this function will never return more than 8 locations. So simply
+storing these on the stack is a lot quicker. My 4-deep exhaustive chess engine took 1.75 s before, and 1.34 s after this
+change on my machine, a fairly nice improvement.
 
 ## TODOs
 
 * [x] Write chess game and ability to generate all legal moves
 * [x] Write Algebraic Notation or Portable Game Notation parser
-* [ ] Automated chess player
+* [x] Automated chess player
 * [ ] Alpha-Beta pruning
 * [ ] Move ordering
 * [ ] Speed up move generation via benchmarking
@@ -76,3 +79,9 @@ This now means that a board fits perfectly into a cache-line.
 I'm yet to do any proper performance testing, but it seems moving away from variant dramatically reduced the time
 to run my test suite. I went from 2.5s to 100ms to run the set. Would be interesting to know where the time was spent.
 It doesn't seem to be due to the cache-line since adding padding to my square struct doesn't reverse it.
+
+## Use it
+
+Require
+* C++17 compiler
+* Google Benchmark installed in a standard place

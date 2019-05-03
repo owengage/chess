@@ -1,4 +1,7 @@
 #pragma once
+
+#include <perf/StackVector.h>
+
 #include <stdexcept>
 #include <vector>
 #include <optional>
@@ -34,15 +37,17 @@ namespace chess
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
         static std::optional<Loc> add_delta(Loc lhs, int x, int y);
-        static std::vector<Loc> direction(Loc origin, int dx, int dy);
+        static perf::StackVector<Loc, 8> direction(Loc origin, int dx, int dy);
     private:
         int m_x;
         int m_y;
 
+        friend Loc operator+(Loc, Loc);
         friend bool operator==(Loc, Loc);
         friend bool operator!=(Loc, Loc);
     };
 
+    Loc operator+(Loc lhs, Loc rhs);
     bool operator==(Loc lhs, Loc rhs);
     bool operator!=(Loc lhs, Loc rhs);
 }

@@ -21,26 +21,35 @@ namespace chess
         Loc(int x, int y);
 
         constexpr Loc(char const * letternum) :
-                m_x{letternum[0] - 'A'},
-                m_y{letternum[1] - '1'}
+                m_index{(letternum[1] - '1')*side_size + (letternum[0] - 'A')}
         {
-            if (m_x >= side_size || m_y >= side_size)
+            if (x() >= side_size || y() >= side_size)
             {
-                throw LocInvalid{m_x,m_y};
+                throw LocInvalid{x(),y()};
             }
         }
 
-        int x() const;
-        int y() const;
-        int index() const;
+        constexpr int x() const
+        {
+            return m_index % side_size;
+        }
+
+        constexpr int y() const
+        {
+            return m_index / side_size;
+        }
+
+        constexpr int index() const
+        {
+            return m_index;
+        }
 
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
         static std::optional<Loc> add_delta(Loc lhs, int x, int y);
         static perf::StackVector<Loc, 8> direction(Loc origin, int dx, int dy);
     private:
-        int m_x;
-        int m_y;
+        int m_index;
 
         friend Loc operator+(Loc, Loc);
         friend bool operator==(Loc, Loc);

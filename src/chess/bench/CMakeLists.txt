@@ -6,6 +6,7 @@ target_sources(available-moves-bench
 
 target_link_libraries(available-moves-bench
         chess
+        chess-pgn
         chess-bench)
 
 

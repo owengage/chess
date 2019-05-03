@@ -105,7 +105,7 @@ Move Suggester::suggest() const
 
     if (!min || !max)
     {
-        throw std::runtime_error{"Found no moves."};
+        return Move{"A1", "A1", Board::blank(), MoveType::invalid};
     }
 
     return m_current.turn == Colour::white ? max->move : min->move;

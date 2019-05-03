@@ -134,10 +134,10 @@ std::optional<Move> chess::pgn::resolve_move(SanMove const& san, Board const& bo
             auto is_mate = caused_mate(board, m);
 
             // Complicated logic since the SAN does not say 'in check' if it's marked as checkmate.
-            bool marked_check_and_isnt = san.check && !m.caused_check;
+            bool marked_check_and_isnt = san.check && m.type != MoveType::check;
             bool marked_checkmate_but_isnt = san.checkmate != is_mate;
-            bool not_marked_check_but_caused_check = !san.check && !is_mate && m.caused_check;
-            bool stalemate = is_mate && !m.caused_check;
+            bool not_marked_check_but_caused_check = !san.check && !is_mate && m.type == MoveType::check;
+            bool stalemate = is_mate && m.type != MoveType::check;
 
             return marked_check_and_isnt
                     || not_marked_check_but_caused_check

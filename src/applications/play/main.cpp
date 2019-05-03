@@ -82,7 +82,14 @@ int main()
 
         auto suggester = chess::Suggester{game.board(), chess::evaluate_with_summation};
         auto suggestion = suggester.suggest();
-        last_move = game.move(suggestion.src, suggestion.dest);
+        if (suggestion.type != MoveType::invalid)
+        {
+            last_move = game.move(suggestion.src, suggestion.dest);
+        }
+        else
+        {
+            last_move = suggestion.type;
+        }
     }
 
     std::cout << "Game ended with move type of " << last_move << '\n';

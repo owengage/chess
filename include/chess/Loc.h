@@ -20,7 +20,7 @@ namespace chess
 
         constexpr Loc(int x, int y) : m_index{y*side_size+x}
         {
-            if (x >= side_size || y >= side_size)
+            if (x < 0 || y < 0 || x >= side_size || y >= side_size)
             {
                 throw LocInvalid{x,y};
             }
@@ -50,13 +50,30 @@ namespace chess
             return m_index;
         }
 
+        static constexpr std::optional<Loc> add_delta(Loc lhs, int dx, int dy)
+        {
+            auto x = lhs.x() + dx;
+            auto y = lhs.y() + dy;
+
+            if (x >= 0 && x < side_size && y >= 0 &&  y < side_size)
+            {
+                // Recalculating index here is/was faster than using x,y constructor.
+                auto delta_index = dy * side_size + dx;
+                return Loc{lhs.index() + delta_index};
+            }
+            else
+            {
+                return std::nullopt;
+            }
+        }
+
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
-        static std::optional<Loc> add_delta(Loc lhs, int x, int y);
         static perf::StackVector<Loc, side_size> direction(Loc origin, int dx, int dy);
     private:
         int m_index;
 
+        constexpr Loc(int index) : m_index{index} {}
         friend bool operator==(Loc, Loc);
         friend bool operator!=(Loc, Loc);
     };

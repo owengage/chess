@@ -89,5 +89,5 @@ namespace
 
 BENCHMARK(bench_available_moves_one_pawn)->Unit(benchmark::kMicrosecond);
 BENCHMARK(bench_available_moves_standard_board)->Unit(benchmark::kMicrosecond);
-BENCHMARK(bench_available_moves_for_some_pgn)->Unit(benchmark::kMillisecond);
+BENCHMARK(bench_available_moves_for_some_pgn)->Unit(benchmark::kMicrosecond);
 BENCHMARK_MAIN();

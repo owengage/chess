@@ -565,14 +565,8 @@ namespace chess {
             board.turn = flip_colour(board.turn);
 
             auto king_loc = find_loc_of(board, King(opposite_colour));
-            auto potentials = potential_moves(board);
-
-            auto it = std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
-            {
-                return m.dest == king_loc;
-            });
-
-            bool in_check = end(potentials) != it;
+            auto threatened = generate_threat_board(board);
+            bool in_check = king_loc && threatened.get(*king_loc);
 
             return in_check ? MoveType::check : MoveType::normal;
         }

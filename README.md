@@ -39,9 +39,9 @@ current player would put them in check).
 I split move generation into two parts, one understands from a given board what moves can be made, and the other
 tracks whatever it needs to track. For the players move generation this is tracking the full move including the
 resultant board. But for checking for check, I can simply fill in a bit-field of what squares are under threat. This
-reduces the amount of work by a fair margin.
+reduces the amount of work by a fair margin. This can also be done for checking for checkmate.
 
-The 41 ms test was reduced to 25 ms.
+The 41 ms test was reduced to 15 ms. 
 
 ## TODOs
 

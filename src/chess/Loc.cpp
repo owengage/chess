@@ -41,21 +41,6 @@ std::vector<Loc> const& Loc::all_squares()
     return all;
 }
 
-std::optional<Loc> Loc::add_delta(Loc lhs, int dx, int dy)
-{
-    auto x = lhs.x() + dx;
-    auto y = lhs.y() + dy;
-
-    if (x >= 0 && x < side_size && y >= 0 &&  y < side_size)
-    {
-        return Loc{x, y};
-    }
-    else
-    {
-        return std::nullopt;
-    }
-}
-
 perf::StackVector<Loc, Loc::side_size> Loc::direction(Loc origin, int dx, int dy)
 {
     auto locs = perf::StackVector<Loc, 8>{};

@@ -26,6 +26,8 @@ Further to that change, I made a lot of `Loc` `constexpr` and changed from stori
 index, since getting this index seemed more common. The 4-deep exhaustive went from 1.34 s down to 0.96 s. So these two
 changes nearly halved the suggestion time for a standard start board. I need to start using a more representative board.
 
+As a new baseline, with this optimisations I can parse a PGN game (which involves move generation) in 41 ms.
+
 ## TODOs
 
 * [x] Write chess game and ability to generate all legal moves

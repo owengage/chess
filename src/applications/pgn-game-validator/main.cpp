@@ -60,7 +60,7 @@ void go_through_game(std::vector<SanMove> const& moves)
 
         auto real_move = chess::pgn::resolve_move(san, game.board());
 
-        if (real_move && game.move(real_move->src, real_move->dest))
+        if (real_move && game.move(real_move->src, real_move->dest) != chess::MoveType::invalid)
         {
             std::cout << "Move: " << to_string(san) << "\n";
             chess::text::print(std::cout, game.board());

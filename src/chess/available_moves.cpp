@@ -30,6 +30,35 @@ namespace chess {
             return std::nullopt;
         }
 
+        constexpr bool is_empty(Board const& board, Loc loc)
+        {
+            return board[loc] == Empty();
+        }
+
+        /**
+         * Location would be a capture if moved there.
+         */
+        constexpr bool is_capturable(Board const& board, Loc loc, Loc src)
+        {
+            auto src_colour = board[src].colour();
+            return !is_empty(board, loc) && src_colour != board[loc].colour();
+        }
+
+        /**
+         * The piece at the given location has moved before.
+         */
+        constexpr bool has_moved(Board const& board, Loc loc)
+        {
+            auto p = board[loc];
+            return p.type() != SquareType::empty && p.has_moved();
+        }
+
+
+        struct FullTracker
+        {
+
+        };
+
         struct PotentialMoves {
             explicit PotentialMoves(Board const& board);
 
@@ -47,22 +76,7 @@ namespace chess {
             void generate_en_passant(Square, Loc);
             void generate_promotions(Square, Loc);
 
-            /**
-             * Location is an empty square/
-             */
-            bool is_empty(Loc loc);
-
-            /**
-             * Location would be a capture if moved there.
-             */
-            bool is_capturable(Loc loc, Loc src);
-            /**
-             * The piece at the given location has moved before.
-             */
-            bool has_moved(Loc loc);
-
             void add(Loc dest, Loc src);
-
 
             void add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src);
 
@@ -86,15 +100,15 @@ namespace chess {
              */
             void add_delta_empty(int dx, int dy, Loc src);
 
+            void add_pawn_double_jump(int dx, int dy, Loc src);
+            void add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest);
+
             /**
              * Add moves for the given direction from the source square.
              */
             void add_direction(int dx, int dy, Loc src);
 
             void add_promotions(Loc src, Loc dest);
-
-            void remove_checked(Colour);
-            void flip_turn_for_list();
 
             Board const& board;
             std::vector<Move> list;
@@ -113,30 +127,6 @@ namespace chess {
                 {
                     generate_for(sq, loc);
                 }
-            }
-
-            // TODO: Better moved to pawn move generation.
-            for (auto & move : list)
-            {
-                if (is_pawn_double_jump(move))
-                {
-                    move.result.last_turn_pawn_double_jump_dest = move.dest;
-                }
-                else
-                {
-                    move.result.last_turn_pawn_double_jump_dest = std::nullopt;
-                }
-            }
-
-            flip_turn_for_list();
-            remove_checked(current_colour);
-        }
-
-        void PotentialMoves::flip_turn_for_list()
-        {
-            for (auto & move : list)
-            {
-                move.result.turn = flip_colour(move.result.turn);
             }
         }
 
@@ -174,22 +164,10 @@ namespace chess {
             }
         }
 
-        bool PotentialMoves::is_empty(Loc loc) {
-            return board[loc] == Empty();
-        }
-
-        bool PotentialMoves::is_capturable(Loc loc, Loc src) {
-            auto src_colour = board[src].colour();
-            return !is_empty(loc) && src_colour != board[loc].colour();
-        }
-
-        bool PotentialMoves::has_moved(Loc loc) {
-            auto p = board[loc];
-            return p.type() != SquareType::empty && p.has_moved();
-        }
-
         void PotentialMoves::add(Loc dest, Loc src) {
             Board b = board;
+            b.last_turn_pawn_double_jump_dest = std::nullopt;
+            b.turn = flip_colour(b.turn);
             b[dest] = b[src];
             b[src] = Empty();
             b[dest].set_moved();
@@ -198,6 +176,8 @@ namespace chess {
 
         void PotentialMoves::add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src) {
             Board b = board;
+            b.last_turn_pawn_double_jump_dest = std::nullopt;
+            b.turn = flip_colour(b.turn);
             b[king_dest] = b[king_src];
             b[king_src] = Empty();
             b[rook_dest] = b[rook_src];
@@ -210,8 +190,8 @@ namespace chess {
         }
 
         bool PotentialMoves::add_standard(Loc dest, Loc src) {
-            bool empty = is_empty(dest);
-            bool capture = is_capturable(dest, src);
+            bool empty = is_empty(board, dest);
+            bool capture = is_capturable(board, dest, src);
             bool occupied = capture || !empty;
 
             if (empty || capture) {
@@ -223,23 +203,48 @@ namespace chess {
 
         void PotentialMoves::add_delta(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && (is_empty(*dest) || is_capturable(*dest, src))) {
+            if (dest && (is_empty(board, *dest) || is_capturable(board, *dest, src))) {
                 add(*dest, src);
             }
         }
 
         void PotentialMoves::add_delta_capture(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && is_capturable(*dest, src)) {
+            if (dest && is_capturable(board, *dest, src)) {
                 add(*dest, src);
             }
         }
 
         void PotentialMoves::add_delta_empty(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && is_empty(*dest)) {
+            if (dest && is_empty(board, *dest)) {
                 add(*dest, src);
             }
+        }
+
+        void PotentialMoves::add_pawn_double_jump(int dx, int dy, Loc src) {
+            auto dest = Loc::add_delta(src, dx, dy);
+            if (dest && is_empty(board, *dest)) {
+                Board b = board;
+                b.turn = flip_colour(b.turn);
+                b.last_turn_pawn_double_jump_dest = *dest;
+                b[*dest] = b[src];
+                b[src] = Empty();
+                b[*dest].set_moved();
+                list.push_back({src, *dest, b});
+            }
+        }
+
+        void PotentialMoves::add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest) {
+            Board b = board;
+            b.last_turn_pawn_double_jump_dest = std::nullopt;
+            b.turn = flip_colour(b.turn);
+            b[dest] = b[src];
+            b[src] = Empty();
+            b[last_turn_double_jump_dest] = Empty(); // capture en passant
+            b[dest].set_moved();
+
+            list.push_back({src, dest, b});
         }
 
         void PotentialMoves::add_direction(int dx, int dy, Loc src) {
@@ -248,16 +253,6 @@ namespace chess {
                     break;
                 }
             }
-        }
-
-        void PotentialMoves::remove_checked(Colour current_colour) {
-            auto king_loc = find_loc_of(board, King(current_colour));
-
-            auto new_end = std::remove_if(begin(list), end(list), [this, &king_loc](Move m) {
-                return m.dest == king_loc;
-            });
-
-            list.erase(new_end, end(list));
         }
 
         void PotentialMoves::generate_for_pawn(Square p, Loc src) {
@@ -273,8 +268,8 @@ namespace chess {
 
             // Can move two if hasn't moved before and first space free.
             auto jump_one = Loc::add_delta(src, 0, direction);
-            if (jump_one && is_empty(*jump_one) && !has_moved(src)) {
-                add_delta_empty(0, 2 * direction, src);
+            if (jump_one && is_empty(board, *jump_one) && !has_moved(board, src)) {
+                add_pawn_double_jump(0, 2 * direction, src);
             }
 
             generate_en_passant(p, src);
@@ -284,6 +279,8 @@ namespace chess {
         void PotentialMoves::add_promotions(Loc src, Loc dest)
         {
             auto new_board = board;
+            new_board.turn = flip_colour(new_board.turn);
+            new_board.last_turn_pawn_double_jump_dest = std::nullopt;
             new_board[dest] = new_board[src];
             new_board[src] = Empty();
 
@@ -310,17 +307,17 @@ namespace chess {
             // Must be a promotion if we're going to land on either end of the board.
             if (non_capture_dest && (non_capture_dest->y() == Loc::side_size - 1 || non_capture_dest->y() == 0))
             {
-                if (is_empty(*non_capture_dest))
+                if (is_empty(board, *non_capture_dest))
                 {
                     add_promotions(src, *non_capture_dest);
                 }
 
-                if (left_capture_dest && is_capturable(*left_capture_dest, src))
+                if (left_capture_dest && is_capturable(board, *left_capture_dest, src))
                 {
                     add_promotions(src, *left_capture_dest);
                 }
 
-                if (right_capture_dest && is_capturable(*right_capture_dest, src))
+                if (right_capture_dest && is_capturable(board, *right_capture_dest, src))
                 {
                     add_promotions(src, *right_capture_dest);
                 }
@@ -342,15 +339,8 @@ namespace chess {
 
                 if (last_move_was_to_side_of_current) {
                     auto dest = Loc::add_delta(*last_move_dest, 0, direction);
-                    if (dest && is_empty(*dest)) {
-                        Board b = board;
-                        b[*dest] = b[src];
-                        b[src] = Empty();
-                        b[*last_move_dest] = Empty(); // capture en passant
-
-                        b[*dest].set_moved();
-
-                        list.push_back({src, *dest, b});
+                    if (dest && is_empty(board, *dest)) {
+                        add_en_passant(src, *dest, *board.last_turn_pawn_double_jump_dest);
                     }
                 }
             }
@@ -410,7 +400,7 @@ namespace chess {
 
                 for (auto x = x_min; x <= x_max; ++x)
                 {
-                    if (!is_empty({x, y}))
+                    if (!is_empty(board, {x, y}))
                     {
                         return false;
                     }
@@ -418,14 +408,14 @@ namespace chess {
                 return true;
             };
 
-            if (!has_moved(src))
+            if (!has_moved(board, src))
             {
                 auto colour = k.colour();
                 auto left = Loc{0, src.y()};
                 auto right = Loc{Loc::side_size - 1, src.y()};
                 auto rook = Rook(colour);
 
-                if (board[left] == rook && !has_moved(left))
+                if (board[left] == rook && !has_moved(board, left))
                 {
                     auto king_src = src;
                     auto king_dest = *Loc::add_delta(left, 2, 0);
@@ -437,7 +427,7 @@ namespace chess {
                     }
                 }
 
-                if (board[right] == rook && !has_moved(right))
+                if (board[right] == rook && !has_moved(board, right))
                 {
                     auto king_src = src;
                     auto king_dest = *Loc::add_delta(right, -1, 0);

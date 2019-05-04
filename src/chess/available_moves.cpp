@@ -470,6 +470,54 @@ namespace chess {
             return tracker.pilfer();
         }
 
+        struct BoardMask
+        {
+                void set(Loc loc)
+                {
+                    auto mask = std::uint64_t{1u} << static_cast<std::uint64_t >(loc.index());
+                    m_data |= mask;
+                }
+
+                bool get(Loc loc) const
+                {
+                    auto mask = std::uint64_t{1u} << static_cast<std::uint64_t >(loc.index());
+                    return mask & m_data;
+                }
+        private:
+                std::uint64_t m_data;
+        };
+
+        struct ThreatTracker
+        {
+            void add(Loc src, Loc dest)
+            {
+                threatened.set(dest);
+            }
+
+            void add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest)
+            {
+                threatened.set(dest);
+            }
+
+            void add_promotions(Loc src, Loc dest)
+            {
+                // TODO: Add unit test that fails if this line isn't present.
+                threatened.set(dest);
+            }
+
+            void add_castling(Loc king_src, Loc king_dest, Loc rook_src, Loc rook_dest) {}
+            void add_pawn_double_jump(Loc src, Loc dest) {}
+
+            BoardMask threatened;
+        };
+
+        BoardMask generate_threat_board(Board const& board)
+        {
+            auto tracker = ThreatTracker{};
+            PotentialMoves<ThreatTracker>{board, tracker};
+            return tracker.threatened;
+        }
+
         bool is_castling(Move const& move)
         {
             return (move.result[move.dest].type() == SquareType::king) && std::abs(move.src.x() - move.dest.x()) > 1;
@@ -482,12 +530,9 @@ namespace chess {
             board = current_move.result;
 
             auto king_loc = find_loc_of(board, King(current_colour));
-            auto potentials = potential_moves(board);
+            auto threatened = generate_threat_board(board);
 
-            bool in_check = end(potentials) != std::find_if(begin(potentials), end(potentials), [&king_loc](Move m)
-            {
-                return m.dest == king_loc;
-            });
+            bool in_check = king_loc && threatened.get(*king_loc);
 
             if (!in_check && is_castling(current_move))
             {
@@ -503,9 +548,9 @@ namespace chess {
                     vulnerable_squares.emplace_back(x,y);
                 }
 
-                in_check |= end(potentials) != std::find_if(begin(potentials), end(potentials), [&current_move, &vulnerable_squares](Move enemy_move)
+                in_check |= std::any_of(begin(vulnerable_squares), end(vulnerable_squares), [&threatened](Loc loc)
                 {
-                    return std::find(begin(vulnerable_squares), end(vulnerable_squares), enemy_move.dest) != end(vulnerable_squares);
+                    return threatened.get(loc);
                 });
             }
 

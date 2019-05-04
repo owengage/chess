@@ -26,7 +26,22 @@ Further to that change, I made a lot of `Loc` `constexpr` and changed from stori
 index, since getting this index seemed more common. The 4-deep exhaustive went from 1.34 s down to 0.96 s. So these two
 changes nearly halved the suggestion time for a standard start board. I need to start using a more representative board.
 
-As a new baseline, with this optimisations I can parse a PGN game (which involves move generation) in 41 ms.
+### Move generation optimisations
+
+As a new baseline, with the above optimisations I can parse a PGN game (which involves move generation to validate) in 
+41 ms.
+
+Move generation used to have a lot of wasted calculation. The `potential_moves` function was heavily overused, for
+example it was used to check for check. I would calculate all potential moves, then for each of those moves determine
+all the potential moves from there by the opponent to see if they threaten the king (ie the move we generated for the
+current player would put them in check).
+
+I split move generation into two parts, one understands from a given board what moves can be made, and the other
+tracks whatever it needs to track. For the players move generation this is tracking the full move including the
+resultant board. But for checking for check, I can simply fill in a bit-field of what squares are under threat. This
+reduces the amount of work by a fair margin.
+
+The 41 ms test was reduced to 25 ms.
 
 ## TODOs
 

@@ -38,10 +38,10 @@ namespace chess {
         /**
          * Location would be a capture if moved there.
          */
-        constexpr bool is_capturable(Board const& board, Loc loc, Loc src)
+        constexpr bool is_capturable(Board const& board, Loc src, Loc dest)
         {
             auto src_colour = board[src].colour();
-            return !is_empty(board, loc) && src_colour != board[loc].colour();
+            return !is_empty(board, dest) && src_colour != board[dest].colour();
         }
 
         /**
@@ -53,16 +53,98 @@ namespace chess {
             return p.type() != SquareType::empty && p.has_moved();
         }
 
-
         struct FullTracker
         {
+            FullTracker(Board const& start) : start{start} {}
 
+            std::vector<Move> pilfer()
+            {
+                std::vector<Move> receiver;
+                std::swap(receiver, moves);
+                return receiver;
+            }
+
+            void add(Loc src, Loc dest)
+            {
+                Board b = start;
+                b.last_turn_pawn_double_jump_dest = std::nullopt;
+                b.turn = flip_colour(b.turn);
+                b[dest] = b[src];
+                b[src] = Empty();
+                b[dest].set_moved();
+                moves.push_back({src, dest, b});
+            }
+
+            void add_castling(Loc king_src, Loc king_dest, Loc rook_src, Loc rook_dest)
+            {
+                Board b = start;
+                b.last_turn_pawn_double_jump_dest = std::nullopt;
+                b.turn = flip_colour(b.turn);
+                b[king_dest] = b[king_src];
+                b[king_src] = Empty();
+                b[rook_dest] = b[rook_src];
+                b[rook_src] = Empty();
+
+                b[rook_dest].set_moved();
+                b[king_dest].set_moved();
+
+                moves.push_back({king_src, king_dest, b});
+            }
+
+            void add_pawn_double_jump(Loc src, Loc dest)
+            {
+                Board b = start;
+                b.turn = flip_colour(b.turn);
+                b.last_turn_pawn_double_jump_dest = dest;
+                b[dest] = b[src];
+                b[src] = Empty();
+                b[dest].set_moved();
+                moves.push_back({src, dest, b});
+            }
+
+            void add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest)
+            {
+                Board b = start;
+                b.last_turn_pawn_double_jump_dest = std::nullopt;
+                b.turn = flip_colour(b.turn);
+                b[dest] = b[src];
+                b[src] = Empty();
+                b[last_turn_double_jump_dest] = Empty(); // capture en passant
+                b[dest].set_moved();
+
+                moves.push_back({src, dest, b});
+            }
+
+            void add_promotions(Loc src, Loc dest)
+            {
+                auto new_board = start;
+                new_board.turn = flip_colour(new_board.turn);
+                new_board.last_turn_pawn_double_jump_dest = std::nullopt;
+                new_board[dest] = new_board[src];
+                new_board[src] = Empty();
+
+                new_board[dest].set_type(SquareType::rook);
+                moves.push_back({src, dest, new_board, MoveType::normal, true});
+
+                new_board[dest].set_type(SquareType::bishop);
+                moves.push_back({src, dest, new_board, MoveType::normal, true});
+
+                new_board[dest].set_type(SquareType::knight);
+                moves.push_back({src, dest, new_board, MoveType::normal, true});
+
+                new_board[dest].set_type(SquareType::queen);
+                moves.push_back({src, dest, new_board, MoveType::normal, true});
+            }
+
+        private:
+            Board const& start;
+            std::vector<Move> moves;
         };
 
-        struct PotentialMoves {
-            explicit PotentialMoves(Board const& board);
-
-            std::vector<Move> retrieve();
+        template<typename Tracker>
+        struct PotentialMoves
+        {
+            explicit PotentialMoves(Board const& board, Tracker & tracker);
 
         private:
             void generate_for(Square, Loc);
@@ -76,14 +158,10 @@ namespace chess {
             void generate_en_passant(Square, Loc);
             void generate_promotions(Square, Loc);
 
-            void add(Loc dest, Loc src);
-
-            void add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src);
-
             /**
              * Add a standard move or capture move, return if should stop.
              */
-            bool add_standard(Loc dest, Loc src);
+            bool add_standard(Loc src, Loc dest);
 
             /**
              * Set ability to move to given offset-location. Allows move to empty square and to capture.
@@ -101,22 +179,19 @@ namespace chess {
             void add_delta_empty(int dx, int dy, Loc src);
 
             void add_pawn_double_jump(int dx, int dy, Loc src);
-            void add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest);
 
             /**
              * Add moves for the given direction from the source square.
              */
             void add_direction(int dx, int dy, Loc src);
 
-            void add_promotions(Loc src, Loc dest);
-
             Board const& board;
-            std::vector<Move> list;
+            Tracker & tracker;
         };
 
-
-        PotentialMoves::PotentialMoves(Board const& board)
-                : board{board}, list{}
+        template<typename Tracker>
+        PotentialMoves<Tracker>::PotentialMoves(Board const& board, Tracker & tracker)
+                : board{board}, tracker{tracker}
         {
             auto current_colour = board.turn;
 
@@ -130,14 +205,8 @@ namespace chess {
             }
         }
 
-        std::vector<Move> PotentialMoves::retrieve()
-        {
-            std::vector<Move> ret;
-            std::swap(ret, list);
-            return ret;
-        }
-
-        void PotentialMoves::generate_for(Square sq, Loc src)
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for(Square sq, Loc src)
         {
             switch (sq.type())
             {
@@ -164,98 +233,64 @@ namespace chess {
             }
         }
 
-        void PotentialMoves::add(Loc dest, Loc src) {
-            Board b = board;
-            b.last_turn_pawn_double_jump_dest = std::nullopt;
-            b.turn = flip_colour(b.turn);
-            b[dest] = b[src];
-            b[src] = Empty();
-            b[dest].set_moved();
-            list.push_back({src, dest, b});
-        }
-
-        void PotentialMoves::add_castling(Loc king_dest, Loc king_src, Loc rook_dest, Loc rook_src) {
-            Board b = board;
-            b.last_turn_pawn_double_jump_dest = std::nullopt;
-            b.turn = flip_colour(b.turn);
-            b[king_dest] = b[king_src];
-            b[king_src] = Empty();
-            b[rook_dest] = b[rook_src];
-            b[rook_src] = Empty();
-
-            b[rook_dest].set_moved();
-            b[king_dest].set_moved();
-
-            list.push_back({king_src, king_dest, b});
-        }
-
-        bool PotentialMoves::add_standard(Loc dest, Loc src) {
+        template<typename Tracker>
+        bool PotentialMoves<Tracker>::add_standard(Loc src, Loc dest)
+        {
             bool empty = is_empty(board, dest);
-            bool capture = is_capturable(board, dest, src);
+            bool capture = is_capturable(board, src, dest);
             bool occupied = capture || !empty;
 
-            if (empty || capture) {
-                add(dest, src);
+            if (empty || capture)
+            {
+                tracker.add(src, dest);
             }
 
             return occupied;
         }
 
-        void PotentialMoves::add_delta(int dx, int dy, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::add_delta(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && (is_empty(board, *dest) || is_capturable(board, *dest, src))) {
-                add(*dest, src);
+            if (dest && (is_empty(board, *dest) || is_capturable(board, src, *dest))) {
+                tracker.add(src, *dest);
             }
         }
 
-        void PotentialMoves::add_delta_capture(int dx, int dy, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::add_delta_capture(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && is_capturable(board, *dest, src)) {
-                add(*dest, src);
+            if (dest && is_capturable(board, src, *dest)) {
+                tracker.add(src, *dest);
             }
         }
 
-        void PotentialMoves::add_delta_empty(int dx, int dy, Loc src) {
-            auto dest = Loc::add_delta(src, dx, dy);
-            if (dest && is_empty(board, *dest)) {
-                add(*dest, src);
-            }
-        }
-
-        void PotentialMoves::add_pawn_double_jump(int dx, int dy, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::add_delta_empty(int dx, int dy, Loc src) {
             auto dest = Loc::add_delta(src, dx, dy);
             if (dest && is_empty(board, *dest)) {
-                Board b = board;
-                b.turn = flip_colour(b.turn);
-                b.last_turn_pawn_double_jump_dest = *dest;
-                b[*dest] = b[src];
-                b[src] = Empty();
-                b[*dest].set_moved();
-                list.push_back({src, *dest, b});
+                tracker.add(src, *dest);
             }
         }
 
-        void PotentialMoves::add_en_passant(Loc src, Loc dest, Loc last_turn_double_jump_dest) {
-            Board b = board;
-            b.last_turn_pawn_double_jump_dest = std::nullopt;
-            b.turn = flip_colour(b.turn);
-            b[dest] = b[src];
-            b[src] = Empty();
-            b[last_turn_double_jump_dest] = Empty(); // capture en passant
-            b[dest].set_moved();
-
-            list.push_back({src, dest, b});
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::add_pawn_double_jump(int dx, int dy, Loc src) {
+            auto dest = Loc::add_delta(src, dx, dy);
+            if (dest && is_empty(board, *dest)) {
+                tracker.add_pawn_double_jump(src, *dest);
+            }
         }
 
-        void PotentialMoves::add_direction(int dx, int dy, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::add_direction(int dx, int dy, Loc src) {
             for (Loc loc : Loc::direction(src, dx, dy)) {
-                if (add_standard(loc, src)) {
+                if (add_standard(src, loc)) {
                     break;
                 }
             }
         }
 
-        void PotentialMoves::generate_for_pawn(Square p, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_pawn(Square p, Loc src) {
             int direction = p.colour() == Colour::white ? 1 : -1;
 
             // Only add square ahead if not at the end of the board. Promotion move dealt with specially.
@@ -276,28 +311,8 @@ namespace chess {
             generate_promotions(p, src);
         }
 
-        void PotentialMoves::add_promotions(Loc src, Loc dest)
-        {
-            auto new_board = board;
-            new_board.turn = flip_colour(new_board.turn);
-            new_board.last_turn_pawn_double_jump_dest = std::nullopt;
-            new_board[dest] = new_board[src];
-            new_board[src] = Empty();
-
-            new_board[dest].set_type(SquareType::rook);
-            list.push_back({src, dest, new_board, MoveType::normal, true});
-
-            new_board[dest].set_type(SquareType::bishop);
-            list.push_back({src, dest, new_board, MoveType::normal, true});
-
-            new_board[dest].set_type(SquareType::knight);
-            list.push_back({src, dest, new_board, MoveType::normal, true});
-
-            new_board[dest].set_type(SquareType::queen);
-            list.push_back({src, dest, new_board, MoveType::normal, true});
-        }
-
-        void PotentialMoves::generate_promotions(Square p, Loc src)
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_promotions(Square p, Loc src)
         {
             int direction = p.colour() == Colour::white ? 1 : -1;
             auto non_capture_dest = Loc::add_delta(src, 0, direction);
@@ -309,22 +324,24 @@ namespace chess {
             {
                 if (is_empty(board, *non_capture_dest))
                 {
-                    add_promotions(src, *non_capture_dest);
+                    tracker.add_promotions(src, *non_capture_dest);
                 }
 
-                if (left_capture_dest && is_capturable(board, *left_capture_dest, src))
+                if (left_capture_dest && is_capturable(board, src, *left_capture_dest))
                 {
-                    add_promotions(src, *left_capture_dest);
+                    tracker.add_promotions(src, *left_capture_dest);
+
                 }
 
-                if (right_capture_dest && is_capturable(board, *right_capture_dest, src))
+                if (right_capture_dest && is_capturable(board, src, *right_capture_dest))
                 {
-                    add_promotions(src, *right_capture_dest);
+                    tracker.add_promotions(src, *right_capture_dest);
                 }
             }
         }
 
-        void PotentialMoves::generate_en_passant(Square p, Loc src)
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_en_passant(Square p, Loc src)
         {
             // If in the last move a pawn jumped 2 spaces, and we're in the position where if it moved just one we could
             // take it, we can move there and take the pawn that jumped 2 squares.
@@ -340,20 +357,22 @@ namespace chess {
                 if (last_move_was_to_side_of_current) {
                     auto dest = Loc::add_delta(*last_move_dest, 0, direction);
                     if (dest && is_empty(board, *dest)) {
-                        add_en_passant(src, *dest, *board.last_turn_pawn_double_jump_dest);
+                        tracker.add_en_passant(src, *dest, *board.last_turn_pawn_double_jump_dest);
                     }
                 }
             }
         }
 
-        void PotentialMoves::generate_for_rook(Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_rook(Loc src) {
             add_direction(1, 0, src);
             add_direction(0, 1, src);
             add_direction(0, -1, src);
             add_direction(-1, 0, src);
         }
 
-        void PotentialMoves::generate_for_knight(Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_knight(Loc src) {
             add_delta(1, 2, src);
             add_delta(1, -2, src);
             add_delta(-1, 2, src);
@@ -364,14 +383,16 @@ namespace chess {
             add_delta(-2, -1, src);
         }
 
-        void PotentialMoves::generate_for_bishop(Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_bishop(Loc src) {
             add_direction(1, 1, src);
             add_direction(-1, 1, src);
             add_direction(1, -1, src);
             add_direction(-1, -1, src);
         }
 
-        void PotentialMoves::generate_for_queen(Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_queen(Loc src) {
             add_direction(0, 1, src);
             add_direction(1, 0, src);
             add_direction(-1, 0, src);
@@ -382,7 +403,8 @@ namespace chess {
             add_direction(-1, -1, src);
         }
 
-        void PotentialMoves::generate_for_king(Square k, Loc src) {
+        template<typename Tracker>
+        void PotentialMoves<Tracker>::generate_for_king(Square k, Loc src) {
             add_delta(0, 1, src);
             add_delta(1, 1, src);
             add_delta(1, 0, src);
@@ -423,7 +445,7 @@ namespace chess {
 
                     if (empty_from_to(king_src, king_dest))
                     {
-                        add_castling(king_dest, king_src, rook_dest, left);
+                        tracker.add_castling(king_src, king_dest, left, rook_dest);
                     }
                 }
 
@@ -435,7 +457,7 @@ namespace chess {
 
                     if (empty_from_to(king_src, king_dest))
                     {
-                        add_castling(king_dest, king_src, rook_dest, right);
+                        tracker.add_castling(king_src, king_dest, right, rook_dest);
                     }
                 }
             }
@@ -443,8 +465,9 @@ namespace chess {
 
         std::vector<Move> potential_moves(Board const& board)
         {
-            auto pm = PotentialMoves{board};
-            return pm.retrieve();
+            auto tracker = FullTracker{board};
+            PotentialMoves<FullTracker>{board, tracker};
+            return tracker.pilfer();
         }
 
         bool is_castling(Move const& move)

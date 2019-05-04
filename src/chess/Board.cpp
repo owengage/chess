@@ -57,13 +57,3 @@ Board Board::with_pieces(std::vector<std::pair<Loc, Square>> const& pieces)
     }
     return b;
 }
-
-Square & Board::operator[](Loc loc)
-{
-    return squares[loc.index()];
-}
-
-Square const& Board::operator[](Loc loc) const
-{
-    return squares[loc.index()];
-}

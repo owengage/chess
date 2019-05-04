@@ -16,8 +16,15 @@ namespace chess
         static Board blank();
         static Board with_pieces(std::vector<std::pair<Loc, Square>> const&);
 
-        Square & operator[](Loc loc);
-        Square const& operator[](Loc loc) const;
+        constexpr Square & operator[](Loc loc)
+        {
+            return squares[loc.index()];
+        }
+
+        constexpr Square const& operator[](Loc loc) const
+        {
+            return squares[loc.index()];
+        }
 
         Colour turn = Colour::white;
         std::optional<Loc> last_turn_pawn_double_jump_dest = std::nullopt;

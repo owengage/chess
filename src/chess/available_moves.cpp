@@ -183,7 +183,7 @@ namespace chess {
             /**
              * Add moves for the given direction from the source square.
              */
-            void add_direction(int dx, int dy, Loc src);
+            void add_direction(Sign x, Sign y, Loc src);
 
             Board const& board;
             Tracker & tracker;
@@ -281,8 +281,8 @@ namespace chess {
         }
 
         template<typename Tracker>
-        void PotentialMoves<Tracker>::add_direction(int dx, int dy, Loc src) {
-            for (Loc loc : Loc::direction(src, dx, dy)) {
+        void PotentialMoves<Tracker>::add_direction(Sign x, Sign y, Loc src) {
+            for (Loc loc : Loc::direction(src, x, y)) {
                 if (add_standard(src, loc)) {
                     break;
                 }
@@ -365,10 +365,10 @@ namespace chess {
 
         template<typename Tracker>
         void PotentialMoves<Tracker>::generate_for_rook(Loc src) {
-            add_direction(1, 0, src);
-            add_direction(0, 1, src);
-            add_direction(0, -1, src);
-            add_direction(-1, 0, src);
+            add_direction(Sign::positive , Sign::none , src);
+            add_direction(Sign::none , Sign::positive , src);
+            add_direction(Sign::none , Sign::negative , src);
+            add_direction(Sign::negative , Sign::none , src);
         }
 
         template<typename Tracker>
@@ -385,22 +385,22 @@ namespace chess {
 
         template<typename Tracker>
         void PotentialMoves<Tracker>::generate_for_bishop(Loc src) {
-            add_direction(1, 1, src);
-            add_direction(-1, 1, src);
-            add_direction(1, -1, src);
-            add_direction(-1, -1, src);
+            add_direction(Sign::positive , Sign::positive , src);
+            add_direction(Sign::negative , Sign::positive , src);
+            add_direction(Sign::positive , Sign::negative , src);
+            add_direction(Sign::negative , Sign::negative , src);
         }
 
         template<typename Tracker>
         void PotentialMoves<Tracker>::generate_for_queen(Loc src) {
-            add_direction(0, 1, src);
-            add_direction(1, 0, src);
-            add_direction(-1, 0, src);
-            add_direction(0, -1, src);
-            add_direction(1, 1, src);
-            add_direction(-1, 1, src);
-            add_direction(1, -1, src);
-            add_direction(-1, -1, src);
+            add_direction(Sign::none , Sign::positive , src);
+            add_direction(Sign::positive , Sign::none , src);
+            add_direction(Sign::negative , Sign::none , src);
+            add_direction(Sign::none , Sign::negative , src);
+            add_direction(Sign::positive , Sign::positive , src);
+            add_direction(Sign::negative , Sign::positive , src);
+            add_direction(Sign::positive , Sign::negative , src);
+            add_direction(Sign::negative , Sign::negative , src);
         }
 
         template<typename Tracker>

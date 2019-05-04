@@ -41,7 +41,31 @@ tracks whatever it needs to track. For the players move generation this is track
 resultant board. But for checking for check, I can simply fill in a bit-field of what squares are under threat. This
 reduces the amount of work by a fair margin. This can also be done for checking for checkmate.
 
-The 41 ms test was reduced to 15 ms. 
+The 41 ms test was reduced to 15 ms.
+
+### Inlining/constexpr
+
+Running a few thousand games through my PGN validator and recording with `perf` pointed out that the `operator[]` on my
+Board class was heavily hit, which isn't very surprising. I inlined this by making it `constexpr` (because why not) and
+the same test goes down to 8 ms.
+
+### Direction generation
+
+A lot of time is now spend in `Loc::direction`. This function takes a start point, an x direction, and a y direction and
+returns a `StackVector` of valid locations for that direction. I've tried a few things to speed this up to no avail:
+
+* Inlining had almost no effect. I imagine it's too much to inline.
+* Rewriting the code to compute the amount of hops it will produce and then having a basic loop increasing the index
+  that many times also didn't affect the speed.
+* Precomuting every `StackVector` that will be produced. This is only `64 squares * 8 directions * 8 ints` so is not
+  too large. Unfortunately it looks like the look-up time for a `std::map` and a `std::unordered_map` is slower than
+  computing the vector each time. It took us from 8 ms to 10ms for our PGN validation. I also can't generate this at
+  compile time since the standard containers are not constexpr. Look-up would still have to be runtime anyway.
+  
+The final point about look-up taking too long can be avoided if it's just an index lookup. Since a direction is
+essentially keyed on a 0-63 int, and two -1, 0, or +1 directions, I can just OR these up into an index and fill a normal
+array with them. There will be gaps, but who cares? This took us from 8 to 6.4 ms! Our chess engine example that started
+at 1.75 s now takes 0.2 s. A few simple optimisations have given us nearly an order of magnitude of speed-up.
 
 ## TODOs
 
@@ -53,6 +77,7 @@ The 41 ms test was reduced to 15 ms.
 * [ ] Move ordering
 * [ ] Better chess viewer
 * [ ] Implement stalemate through 'inactivity'
+* [ ] Make the direction look-up table constexpr.
 
 ###### Small things
 

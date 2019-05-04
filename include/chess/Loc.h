@@ -13,10 +13,19 @@ namespace chess
         LocInvalid(int x, int y);
     };
 
+    enum class Sign
+    {
+        positive = 1,
+        none = 0,
+        negative = -1
+    };
+
     struct Loc
     {
         static constexpr int side_size = 8;
         static constexpr int board_size = side_size * side_size;
+
+        constexpr Loc(int index) : m_index{index} {}
 
         constexpr Loc(int x, int y) : m_index{y*side_size+x}
         {
@@ -69,11 +78,10 @@ namespace chess
 
         static std::vector<Loc> row(int y);
         static std::vector<Loc> const& all_squares();
-        static perf::StackVector<Loc, side_size> direction(Loc origin, int dx, int dy);
+        static perf::StackVector<Loc, side_size> direction(Loc origin, Sign x, Sign y);
     private:
         int m_index;
 
-        constexpr Loc(int index) : m_index{index} {}
         friend bool operator==(Loc, Loc);
         friend bool operator!=(Loc, Loc);
     };
